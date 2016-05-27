@@ -8,10 +8,60 @@
 \usepackage[utf8]{inputenc}          % UTF-8 Encoding
 \usepackage[british]{babel}          % Use British English language settings
 \usepackage{hyperref}                % Interactive PDF
+\usepackage{xcolor}                  % Colours
+\usepackage{listings}                % Source code listings
+
+\lstset{
+ backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+ basicstyle=\ttfamily\footnotesize,        % the size of the fonts that are used for the code
+ keywordstyle=\bfseries,
+ commentstyle=\itshape,
+ breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+ breaklines=true,                 % sets automatic line breaking
+ captionpos=b,                    % sets the caption-position to bottom
+ escapeinside={\#*}{*\#},          % if you want to add LaTeX within your code
+ extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+ frame=none,	                   % adds a frame around the code
+ keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+ numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+ rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+ showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+ showstringspaces=false,          % underline spaces within strings only
+ showtabs=false,                  % show tabs within strings adding particular underscores
+ tabsize=1,	                   % sets default tabsize to 2 spaces
+ title=\lstname,                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+ caption={},
+ belowcaptionskip=-1\baselineskip,
+ xleftmargin=0.1\parindent,
+ columns=fullflexible
+}
+
+% Define Links as a lst-language
+\lstdefinelanguage{Links}{% 
+  morekeywords={typename, fun, op, var, if, true, false, else, case, switch, handle, handler, shallowhandler, do, sig},%
+  sensitive=t, % 
+  keywordstyle=\color{red},
+  emph={Comp,Bool,Int,Char,String,Choose,Return,Toss},
+  emphstyle={\color{blue}},
+  comment=[l]{\#},% 
+  escapeinside={(*}{*)},%
+  morestring=[d]{"}%
+}
+
+\newcommand{\textapprox}{{\fontfamily{ptm}\selectfont\texttildelow}}
+\newcommand{\wildarrow}{\linksify{\textapprox{}>}}
+% Links style
+\lstdefinestyle{links}{
+  basicstyle=\linespread{1.0}\ttfamily\footnotesize,
+  language=Links,
+  literate= {~>}{{\wildarrow}}1
+}
+
+\lstset{style={links}}
 
 %% TODOs and comments
 \newcommand{\msgbox}[2]{{%
-  \par\noindent\small\color{red} 
+  \par\noindent\small\color{red}%
   \framebox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{#1:} #2}}%
 }}
 \newcommand{\todo}[1]{\msgbox{TODO}{#1}}
@@ -21,34 +71,27 @@
 \newcommand{\kc}[1]{\msgbox{KC}{#1}}
 
 \begin{document}
+%% Remove SIGPLANCONF copyright space
+\makeatletter
+\def\@copyrightspace{\relax}
+\makeatother
 
+%% Set paper geometry
 \special{papersize=8.5in,11in}
 \setlength{\pdfpageheight}{\paperheight}
 \setlength{\pdfpagewidth}{\paperwidth}
 
-\conferenceinfo{CONF 'yy}{Month d--d, 20yy, City, ST, Country} 
-\copyrightyear{2016} 
-\copyrightdata{978-1-nnnn-nnnn-n/yy/mm} 
-\doi{nnnnnnn.nnnnnnn}
-
-% Uncomment one of the following two, if you are not going for the 
-% traditional copyright transfer agreement.
-
-%\exclusivelicense                % ACM gets exclusive license to publish, 
-                                  % you retain copyright
-
-%\permissiontopublish             % ACM gets nonexclusive license to publish
-                                  % (paid open-access papers, 
-                                  % short abstracts)
-
-\newcommand{\contact}[1]{#1@ed.ac.uk}
+%% Obfuscate e-mail addresses
+\newcommand{\camacuk}{@cam.ac.uk}
+\newcommand{\edacuk}{@ed.ac.uk}
+\newcommand{\contact}[2]{#1@#2}
 \newcommand{\reachme}[1]{\hyperlink{mailto:\contact{#1}}{\contact{#1}}}
 
-\titlebanner{Extended Abstract}    % These are ignored unless
-\preprintfooter{}                  % 'preprint' option specified.
+\titlebanner{}    % These are ignored unless
+\preprintfooter{} % 'preprint' option specified.
 
 \title{Towards Compilation of Affine Algebraic Effect Handlers}
-
+\subtitle{-- Extended Abstract --}
 \authorinfo{Daniel Hillerström}
            {The University of Edinburgh}
            {~}%{\reachme{daniel.hillerstrom}}
@@ -64,14 +107,41 @@
 \maketitle
 
 \begin{abstract}
-Two to three lines\dots
+  Algebraic effects and handlers provide a modular abstraction for
+  effectful programming that allow programmers to separate effect
+  signatures from their implementation. We present a compiler for the
+  experimental language Links with effect handlers.
+\dhil{Mention the OCaml backend}
 \end{abstract}
 
-\section{Introduction}
+\section{Motivation}
+Algebraic effects and effect handlers \cite{Plotkin2013} afford a
+modular and structured interface for programming with delimited
+continuations. 
 
-\section{Affine effect handlers}
+\section{Affine algebraic effect handlers}
+An algebraic effect is given by a signature of \emph{abstract
+  operations}. For example \emph{nondeterminism} is an algebraic
+effect that is given by a nondeterministic choice operation called
+\lstinline$Choose$. In Links, we may implement it as follows:
+\begin{lstlisting}
+sig choose : () {Choose:Bool|e}-> Bool
+fun choose() { do Choose }
+\end{lstlisting}
+
+
+\section{Compiler infrastructure}
 
 \section{Optimisations}
+
+\subsection{Linearisation}
+
+\subsection{Rediscovering classical optimisations}
+
+\section{Acknowledgements}
+The first author was supported by EPSRC CDT in Pervasive Parallelism (grant EP/L01503X/1).
+The second author was supported by EPSRC grant number EP/K034413/1.
+Thanks to OCaml Labs\dots
 
 \nocite{*} %% FIXME: remove
 
