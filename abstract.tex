@@ -41,7 +41,7 @@
   morekeywords={typename, fun, op, var, if, true, false, else, case, switch, handle, handler, shallowhandler, do, sig},%
   sensitive=t, % 
   keywordstyle=\color{red},
-  emph={Comp,Bool,Int,Char,String,Choose,Return,Toss},
+  emph={Comp,Bool,Int,Char,String,Choose,Return,Toss,Heads,Tails,Nothing,Just,Fail,Zero},
   emphstyle={\color{blue}},
   comment=[l]{\#},% 
   escapeinside={(*}{*)},%
@@ -125,10 +125,45 @@ An algebraic effect is given by a signature of \emph{abstract
 effect that is given by a nondeterministic choice operation called
 \lstinline$Choose$. In Links, we may implement it as follows:
 \begin{lstlisting}
-sig choose : () {Choose:Bool|e}-> Bool
+sig choose : Comp({Choose:Bool |e}, Bool)
 fun choose() { do Choose }
 \end{lstlisting}
+This declares an \emph{abstract computation} \lstinline$choose$, which invokes an
+operation \lstinline$Choose$ using the \lstinline$do$ primitive.
+The \lstinline$sig$ keyword begins a signature.
+Links employs row typing to support extensible effect signature. Thus
+\lstinline$e$ is an effect variable, which can be instantiated with
+additional operations.
 
+\paragraph{Linear handlers} \dots
+\begin{lstlisting}
+sig randomResult : (Comp({Choose:Bool |e}, a)) -> 
+                    Comp({Choose{_}   |e}, a)
+handler randomResult {
+  case Return(x) -> x
+  case Choose(k) -> k(random() > 0.5)
+}
+\end{lstlisting}
+
+\paragraph{Multi-shot handlers} \dots
+\begin{lstlisting}
+sig allResults : (Comp({Choose:Bool |e},  a)) -> 
+                  Comp({Choose{_}   |e}, [a])
+handler allResults {
+  case Return(x) -> [x]
+  case Choose(k) -> k(true) ++ k(false)
+}
+\end{lstlisting}
+
+\paragraph{Exception handlers} \dots
+\begin{lstlisting}
+sig maybeResult : (Comp({Fail:Zero |e},       a)) -> 
+                   Comp({Fail{_}   |e}, Maybe(a))
+handler maybeResult {
+  case Return(x) -> Just(x)
+  case Fail(_)   -> Nothing
+}
+\end{lstlisting}
 
 \section{Compiler infrastructure}
 
@@ -143,7 +178,7 @@ The first author was supported by EPSRC CDT in Pervasive Parallelism (grant EP/L
 The second author was supported by EPSRC grant number EP/K034413/1.
 Thanks to OCaml Labs\dots
 
-\nocite{*} %% FIXME: remove
+%\nocite{*} %% FIXME: remove
 
 \bibliographystyle{abbrvnat} \softraggedright
 \bibliography{references}
