@@ -9,7 +9,7 @@
 \usepackage[british]{babel}          % Use British English language settings
 \usepackage{hyperref}                % Interactive PDF
 \usepackage{xcolor}                  % Colours
-\usepackage[inline]{enumitem}        % Inline enumeration
+\usepackage[inline]{enumitem}        % Inline enumerations
 \usepackage{listings}                % Source code listings
 
 \lstset{
@@ -159,9 +159,11 @@ handler randomResult {
   case Choose(k) -> k(random() > 0.5)
 }
 \end{lstlisting}
-The signature conveys that the handler instantiates the operation
-\lstinline$Choose$ and leaves potentially other operations abstract.
-The handler comprises two clauses: 
+The signature conveys that the handler interprets the operation
+\lstinline$Choose$ and leaves potentially other operations
+abstract. The notation \lstinline$Choose{_}$ denotes that the
+operation is polymorphic in its presence.  The handler comprises two
+clauses:
 \begin{enumerate*}[label={\roman*)}]
 \item the \lstinline$Return$-clause specifies how to handle the return
   value of the computation.
@@ -209,16 +211,23 @@ handlers constitute \emph{affine handlers}.
 \dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
 
 \section{Optimisations}
+It is rather conservative to implement every handler as multi-shot. We
+would like to recover the efficiency of affine handlers.
 
-\subsection{Linearisation}
-\citet{Bruggeman1996} considers efficient representations of linear continuations.
+\paragraph{Linearisation} 
+It is well-known that linear continuations have efficient
+representations \cite{Bruggeman1996}.  We use Links' linear type
+system to track the linearity of handlers. This enable us to
+specialise the implementation of handlers during code generation.
 
-\subsection{Rediscovering classical optimisations}
-
-\paragraph{Fusion} Consider the application
-\lstinline[mathescape]!maybeResult(randomResult($\cdot$))!. A
-sufficient criterion for fusing is that the intersection of their
-effect signature is empty.
+\paragraph{Fusion} Handler fusion is a technique to prune the run-time
+stack. Consider the composition
+\lstinline$maybeResult(randomResult(toss))$. It gives
+rise to a stack with two handlers.  We may use row types to guide when
+handler fusion is sound. A sufficient criterion for fusion of two
+handlers is that the intersection of their effect signatures is
+empty. We fuse handlers clause by clause, thus for
+\lstinline$maybeResult$ and \lstinline$randomResult$ we obtain:
 \begin{lstlisting}
 sig fused : (Comp({Choose:Bool,Fail:Zero |e}, a)) ->
              Comp({Choose{_}  ,Fail{_}   |e}, Maybe(a))
@@ -229,14 +238,17 @@ handler fused {
 }
 \end{lstlisting}
 
-\paragraph{Inlining} \dots
+\paragraph{Inlining} Operation inlining enables us to replace abstract
+operations with their implementations, when these are statically
+resolvable. Furthermore, the handler must affine and the operation
+clause must invoke the continuation in tail position. For example, in
+the application \lstinline$randomResult(toss)$ we may replace
+\lstinline$do Choose$ with the computation \lstinline$random() > 0.5$ at compile-time.
 
 \section{Acknowledgements}
-The first author was supported by EPSRC CDT in Pervasive Parallelism (grant EP/L01503X/1).
-The second author was supported by EPSRC grant number EP/K034413/1.
-Thanks to OCaml Labs\dots
-
-%\nocite{*} %% FIXME: remove
+The first author was supported by EPSRC CDT in Pervasive Parallelism
+(grant EP/L01503X/1).  The second author was supported by EPSRC grant
+number EP/K034413/1.  Thanks to OCaml Labs\dots
 
 \bibliographystyle{abbrvnat} \softraggedright
 \bibliography{references}
