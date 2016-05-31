@@ -224,7 +224,7 @@ specialise the implementation of handlers during code generation.
 stack. Consider the composition
 \lstinline$maybeResult(randomResult(toss))$. It gives
 rise to a stack with two handlers.  We may use row types to guide when
-handler fusion is sound. A sufficient criterion for fusion of two
+handler fusion is sound. A necessary criterion for fusion of two
 handlers is that the intersection of their effect signatures is
 empty. We fuse handlers clause by clause, thus for
 \lstinline$maybeResult$ and \lstinline$randomResult$ we obtain:
