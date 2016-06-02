@@ -9,7 +9,7 @@ SOURCE=$1
 OUTDIR=$2
 
 if [[ ! -d "$OUTDIR" ]]; then
-   echo "error: \"$OUTDIR\" no such directory not found." > /dev/stderr
+   echo "error: \"$OUTDIR\" no such directory found." > /dev/stderr
    exit 1
 fi
 
