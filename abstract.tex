@@ -39,13 +39,13 @@
 }
 
 % Define Links as a lst-language
-\lstdefinelanguage{Links}{% 
+\lstdefinelanguage{Links}{%
   morekeywords={typename, fun, op, var, if, true, false, else, case, switch, handle, handler, shallowhandler, do, sig},%
-  sensitive=t, % 
+  sensitive=t, %
   keywordstyle=\color{red},
   emph={Comp,Bool,Int,Char,String,Choose,Return,Toss,Heads,Tails,Nothing,Just,Fail,Zero,Maybe},
   emphstyle={\color{blue}},
-  comment=[l]{\#},% 
+  comment=[l]{\#},%
   escapeinside={(*}{*)},%
   morestring=[d]{"}%
 }
@@ -114,6 +114,7 @@
   signatures from their implementation. We present a compiler for the
   experimental language Links with effect handlers.
 \dhil{TODO: Mention the OCaml backend}
+
 \end{abstract}
 
 \section{Motivation}
@@ -121,6 +122,13 @@ Algebraic effects and effect handlers \cite{Plotkin2013} afford a
 modular and structured interface for programming with delimited
 continuations.
 \dhil{TODO: Motivation regarding the efficiency of handlers.}
+
+\kc{The paper as it stands now does not mention why, but only deals with the
+question of how. We should mention the current Links backends, and say they
+they are only interpreted. The goal of the project is to add support for
+natively compiled backend for Links through Multicore OCaml, but also take
+advantage of multicore support and efficient JS compilation that will come for
+free by targetting multicore OCaml}.
 
 Previous work focuses mostly on the design and abstraction of
 handlers, but recent work has begun exploring efficient
@@ -154,18 +162,18 @@ accordingly. For example, if we introduce an exception operation
 \lstinline$Fail : Zero$, then we can model a drunk coin toss:
 \begin{lstlisting}
 sig drunkToss : Comp({Choose:Bool,Fail:Zero |e}, Toss)
-fun drunkToss() { if (do Choose) toss() 
+fun drunkToss() { if (do Choose) toss()
                   else switch (do Fail) { } }
 \end{lstlisting}
 Here \lstinline$Zero$ is the empty type, therefore the empty
 \lstinline$switch$ pattern matching construct is required in order to
-make the branches type check.  
+make the branches type check.
 
 An effect handler instantiates a subset of the operations of an
 abstract computation. For example, the following handler interprets
 \lstinline$Choose$ randomly:
 \begin{lstlisting}
-sig randomResult : (Comp({Choose:Bool |e}, a)) -> 
+sig randomResult : (Comp({Choose:Bool |e}, a)) ->
                     Comp({Choose{_}   |e}, a)
 handler randomResult {
   case Return(x) -> x
@@ -191,7 +199,7 @@ Alternatively, we may give an interpretation of \lstinline$Choose$
 that enumerates every possible outcome by invoking the continuation
 twice:
 \begin{lstlisting}
-sig allResults : (Comp({Choose:Bool |e},  a)) -> 
+sig allResults : (Comp({Choose:Bool |e},  a)) ->
                   Comp({Choose{_}   |e}, [a])
 handler allResults {
   case Return(x) -> [x]
@@ -210,7 +218,7 @@ example consider the following handler, which returns
 \lstinline$Just$ the result of the computation or returns
 \lstinline$Nothing$ if the operation \lstinline$Fail$ is performed:
 \begin{lstlisting}
-sig maybeResult : (Comp({Fail:Zero |e},       a)) -> 
+sig maybeResult : (Comp({Fail:Zero |e},       a)) ->
                    Comp({Fail{_}   |e}, Maybe(a))
 handler maybeResult {
   case Return(x) -> Just(x)
@@ -222,12 +230,29 @@ The type system prevents invocation of the continuation in the an
 inhabitants. Linear and exception handlers constitute \emph{affine
   handlers}.
 
+\kc{This section is too long. Can we make this section into a background one,
+where we introduce Links (mention handlers, row polymorphism, effect system)
+and also introduce OCaml's effect handlers (efficient, direct-style
+implementation of continuations i.e, not CPS but heap-managed stack
+datastructure). Mention that OCaml provides one-shot affine handlers with the
+option of explicitly cloning them. Do also mention that OCaml does not have
+effect typing.}
+
 \section{Compiler infrastructure}
 \dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
-OCaml supports only affine handlers. Multiple invocations of a
-continuation causes a run-time error.  In contrast to OCaml, our
-implementation supports multi-shot handlers. In fact, we use
-\lstinline$Obj.clone$ to encode multi-shot handlers.
+\kc{Mention that the compilation strategy targets OCaml's Lambda intermediate
+code. Mention the reasons behind this choice, which seems unintuitive to a
+casual reader. The reason being that fundamentally, Links' type-system is more
+expressive than OCaml's (row-polymorohism) and hence Links programs cannot be
+faithfully translated to surface OCaml syntax. By targetting Lambda, we subvert
+OCaml's typechecker, but since the Links programs are typechecked already, the
+translation is safe.}
+
+OCaml supports only affine handlers. Multiple invocations of a continuation
+causes a run-time error.  In contrast to OCaml, our implementation supports
+multi-shot handlers. In fact, we use \lstinline$Obj.clone$ to encode multi-shot
+handlers. \kc{$Obj.clone$ was too generic and I plan to use
+$Obj.clone\_continuation$ to be less ambiguous.}
 \begin{figure}
 \begin{tikzpicture}
   \drawstruct{(4.5,2)}
@@ -257,8 +282,12 @@ implementation supports multi-shot handlers. In fact, we use
 \section{Optimisations}
 It is rather conservative to implement every handler as multi-shot. We
 would like to recover the efficiency of affine handlers.
+\kc{Even without the optimizations, I expect Links compiled to OCaml to be
+faster than the interpreted version. Compare the performance on Queens? By
+varying the board size:
+https://github.com/kayceesrk/ocaml-eff-example/blob/master/queens.ml}
 
-\paragraph{Linearisation} 
+\paragraph{Linearisation}
 It is well-known that linear continuations have efficient
 representations \cite{Bruggeman1996}.  We use Links' linear type
 system to track the linearity of handlers. This enable us to
