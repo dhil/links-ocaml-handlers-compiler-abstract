@@ -224,6 +224,13 @@ inhabitants. Linear and exception handlers constitute \emph{affine
 
 \section{Compiler infrastructure}
 \dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
+This compiler is our first attempt at compiling
+Links\footnote{Presently, we compile only a subset of Links including
+  effect handlers.} to native code. Until now Links used to be
+translated into an intermediate language in A-normal form (ANF), which
+was interpreted using a generalised CEK machine
+\cite{Hillerstrom2016}.
+
 OCaml supports only affine handlers. Multiple invocations of a
 continuation causes a run-time error.  In contrast to OCaml, our
 implementation supports multi-shot handlers. In fact, we use
@@ -264,6 +271,8 @@ representations \cite{Bruggeman1996}.  We use Links' linear type
 system to track the linearity of handlers. This enable us to
 specialise the implementation of handlers during code generation.
 
+\paragraph{Handler resolution} \dots \dhil{Mapping operations directly to suitable clauses.}
+
 % \paragraph{Fusion} Handler fusion is a technique to prune the run-time
 % stack. Consider the composition
 % \lstinline$maybeResult(randomResult(toss))$. It gives
@@ -296,5 +305,6 @@ number EP/K034413/1.  Thanks to OCaml Labs\dots
 
 \bibliographystyle{abbrvnat} \softraggedright
 \bibliography{references}
+\todo{Minify bibliography}
 
 \end{document}
