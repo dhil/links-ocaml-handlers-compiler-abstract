@@ -1,0 +1,42 @@
+typename Comp(e::Row, a) = () ~e~> a;
+typename Maybe(a) = [|Just:a|Nothing|];
+typename Zero = [||];
+typename Toss = [|Heads|Tails|];
+
+#snippet:toss.links
+sig toss : Comp({Choose:Bool |e}, Toss)
+fun toss() { if (do Choose) Heads else Tails }
+#end
+
+#snippet:drunkToss.links
+sig drunkToss : Comp({Choose:Bool,Fail:Zero |e}, Toss)
+fun drunkToss() { if (do Choose) toss()
+                  else switch (do Fail) { } }
+#end
+
+#snippet:randomResult.links
+sig randomResult : (Comp({Choose:Bool |e}, a)) ->
+                    Comp({Choose{_}   |e}, a)
+handler randomResult {
+  case Return(x) -> x
+  case Choose(k) -> k(random() > 0.5)
+}
+#end
+
+#snippet:allResults.links
+sig allResults : (Comp({Choose:Bool |e},  a)) ->
+                  Comp({Choose{_}   |e}, [a])
+handler allResults {
+  case Return(x) -> [x]
+  case Choose(k) -> k(true) ++ k(false)
+}
+#end
+
+#snippet:maybeResult.links
+sig maybeResult : (Comp({Fail:Zero |e},       a)) ->
+                   Comp({Fail{_}   |e}, Maybe(a))
+handler maybeResult {
+  case Return(x) -> Just(x)
+  case Fail(_)   -> Nothing
+}
+#end

@@ -161,3 +161,7 @@ TSWLatexianTemp*
 # Temporary files
 *~
 \#*
+snippets/
+*.cmx
+*.cmi
+*.o

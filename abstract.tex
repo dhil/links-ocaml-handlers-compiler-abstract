@@ -143,10 +143,9 @@ An algebraic effect is given by a signature of \emph{abstract
 effect that is given by a nondeterministic choice operation called
 \lstinline$Choose$. In Links, we may use this operation to implement a
 coin toss:
-\begin{lstlisting}
-sig toss : Comp({Choose:Bool |e}, Toss)
-fun toss() { if (do Choose) Heads else Tails }
-\end{lstlisting}
+%
+\lstinputlisting{snippets/toss.links}
+%
 This declares an \emph{abstract computation} \lstinline$toss$, which
 invokes an operation \lstinline$Choose$ using the \lstinline$do$
 primitive.  The \lstinline$sig$ keyword begins a signature, which
@@ -160,11 +159,9 @@ additional operations.
 Introduction of another operation causes the effect signature to grow
 accordingly. For example, if we introduce an exception operation
 \lstinline$Fail : Zero$, then we can model a drunk coin toss:
-\begin{lstlisting}
-sig drunkToss : Comp({Choose:Bool,Fail:Zero |e}, Toss)
-fun drunkToss() { if (do Choose) toss()
-                  else switch (do Fail) { } }
-\end{lstlisting}
+%
+\lstinputlisting{snippets/drunkToss.links}
+%
 Here \lstinline$Zero$ is the empty type, therefore the empty
 \lstinline$switch$ pattern matching construct is required in order to
 make the branches type check.
@@ -172,14 +169,9 @@ make the branches type check.
 An effect handler instantiates a subset of the operations of an
 abstract computation. For example, the following handler interprets
 \lstinline$Choose$ randomly:
-\begin{lstlisting}
-sig randomResult : (Comp({Choose:Bool |e}, a)) ->
-                    Comp({Choose{_}   |e}, a)
-handler randomResult {
-  case Return(x) -> x
-  case Choose(k) -> k(random() > 0.5)
-}
-\end{lstlisting}
+%
+\lstinputlisting{snippets/randomResult.links}
+%
 The signature conveys that the handler interprets the operation
 \lstinline$Choose$ and leaves potentially other operations
 abstract. The notation \lstinline$Choose{_}$ denotes that the
@@ -198,14 +190,9 @@ it invokes every continuation exactly once.
 Alternatively, we may give an interpretation of \lstinline$Choose$
 that enumerates every possible outcome by invoking the continuation
 twice:
-\begin{lstlisting}
-sig allResults : (Comp({Choose:Bool |e},  a)) ->
-                  Comp({Choose{_}   |e}, [a])
-handler allResults {
-  case Return(x) -> [x]
-  case Choose(k) -> k(true) ++ k(false)
-}
-\end{lstlisting}
+%
+\lstinputlisting{snippets/allResults.links}
+%
 Observe that the return value gets lifted into a singleton list. The
 \lstinline$Choose$-clause concatenates the outcomes obtained by
 interpreting the operation as \lstinline$true$ and \lstinline$false$,
@@ -217,14 +204,9 @@ handlers are familiarly known as \emph{exception handlers}. As an
 example consider the following handler, which returns
 \lstinline$Just$ the result of the computation or returns
 \lstinline$Nothing$ if the operation \lstinline$Fail$ is performed:
-\begin{lstlisting}
-sig maybeResult : (Comp({Fail:Zero |e},       a)) ->
-                   Comp({Fail{_}   |e}, Maybe(a))
-handler maybeResult {
-  case Return(x) -> Just(x)
-  case Fail(_)   -> Nothing
-}
-\end{lstlisting}
+%
+\lstinputlisting{snippets/maybeResult.links}
+%
 The type system prevents invocation of the continuation in the an
 \lstinline$Fail$-clause, because the type \lstinline$Zero$ has zero
 inhabitants. Linear and exception handlers constitute \emph{affine
