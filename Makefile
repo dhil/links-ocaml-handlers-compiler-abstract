@@ -10,7 +10,7 @@ LFLAGS=--config=$(HOME)/projects/links/compiler/default.config -c --native
 all: $(PAPER).pdf
 
 snippets: $(EXAMPLES)
-	mkdir -p snippets \;
+	mkdir -p snippets
 	bash mksnippets.sh $(EXAMPLES) snippets
 
 $(PAPER).aux: $(PAPER).tex
@@ -33,3 +33,4 @@ clean:
 	rm -f *.fdb_latexmk
 	rm -f $(PAPER).pdf
 	rm -f *.o *.cmx *.cmo
+	rm -rf snippets
