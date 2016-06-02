@@ -10,6 +10,7 @@
 \usepackage{hyperref}                % Interactive PDF
 \usepackage{xcolor}                  % Colours
 \usepackage[inline]{enumitem}        % Inline enumerations
+\usepackage{drawstack}               % Syntactic sugar for tikz for drawing run-time stacks
 \usepackage{listings}                % Source code listings
 
 \lstset{
@@ -124,11 +125,11 @@ continuations.
 Previous work focuses mostly on the design and abstraction of
 handlers, but recent work has begun exploring efficient
 implementations of handlers. Some notable mentions are the OCaml
-Multicore project \cite{Dolan2015}, \citet{Kiselyov2015} \emph{freer
-  monad} implementation in Haskell, and \citet{Wu2015} fusion
-optimisation for (deep) handlers.
+Multicore project \cite{Dolan2015}, \citet{Kammar2013} embedding in
+Haskell, \citet{Kiselyov2015} \emph{freer monad} implementation in
+Haskell, and \citet{Wu2015} fusion optimisation for (deep) handlers.
 
-\section{Affine algebraic effect handlers}
+\section{Affine and multi-shot effect handlers}
 An algebraic effect is given by a signature of \emph{abstract
   operations}. For example \emph{nondeterminism} is an algebraic
 effect that is given by a nondeterministic choice operation called
@@ -144,9 +145,21 @@ primitive.  The \lstinline$sig$ keyword begins a signature, which
 reads: \lstinline$toss$ is a computation with effect signature
 \lstinline${Choose:Bool |e}$ and return value \lstinline$Toss$, whose
 constructors are \lstinline$Heads$ and \lstinline$Tails$.  Links
-employs row typing to support extensible effect signature, thus
+employs row typing to support extensible effect signatures, thus
 \lstinline$e$ is an effect variable, which can be instantiated with
 additional operations.
+
+Introduction of another operation causes the effect signature to grow
+accordingly. For example, if we introduce an exception operation
+\lstinline$Fail : Zero$, then we can model a drunk coin toss:
+\begin{lstlisting}
+sig drunkToss : Comp({Choose:Bool,Fail:Zero |e}, Toss)
+fun drunkToss() { if (do Choose) toss() 
+                  else switch (do Fail) { } }
+\end{lstlisting}
+Here \lstinline$Zero$ is the empty type, therefore the empty
+\lstinline$switch$ pattern matching construct is required in order to
+make the branches type check.  
 
 An effect handler instantiates a subset of the operations of an
 abstract computation. For example, the following handler interprets
@@ -204,11 +217,42 @@ handler maybeResult {
   case Fail(_)   -> Nothing
 }
 \end{lstlisting}
-Here \lstinline$Zero$ is the empty type.  Linear and exception
-handlers constitute \emph{affine handlers}.
+The type system prevents invocation of the continuation in the an
+\lstinline$Fail$-clause, because the type \lstinline$Zero$ has zero
+inhabitants. Linear and exception handlers constitute \emph{affine
+  handlers}.
 
 \section{Compiler infrastructure}
 \dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
+OCaml supports only affine handlers. Multiple invocations of a
+continuation causes a run-time error.  In contrast to OCaml, our
+implementation supports multi-shot handlers. In fact, we use
+\lstinline$Obj.clone$ to encode multi-shot handlers.
+\begin{figure}
+\begin{tikzpicture}
+  \drawstruct{(4.5,2)}
+  \structcell{\lstinline$do Choose$}  \coordinate (DoChoose) at (currentcell.west);
+  \structcell{$\cdots$}
+  \structcell{\lstinline$do Fail$} \coordinate (DoFail) at (currentcell.east);
+  \structcell{\lstinline$Return-clause$}
+  \structcell{\lstinline[keywordstyle=\footnotesize]$Exception handler$}
+  \structcell{\lstinline$Choose-clause$} \coordinate (HandleChoose1) at (currentcell.west); \coordinate (HandleChoose2) at (currentcell.east);
+  \structcell{$\cdot$} \coordinate (H1) at (currentcell.west);
+
+  \drawstruct{(0,0)}
+  \structcell{$\cdots$} \coordinate (H2) at (currentcell.east);
+  \structcell{\lstinline$Return-clause$}
+  \structcell{\lstinline[keywordstyle=\footnotesize]$Exception handler$}
+  \structcell{\lstinline$Fail-clause$}
+  \structcell{$\bot$}
+
+%  \draw[<-] (H2) .. controls ([yshift=0cm] H2) and ([xshift=-10cm,yshift=4cm] H1) .. (H1);
+  \draw (H2) edge[out=-20,in=-175,<-] (H1);
+  \draw (DoChoose) edge[out=175,in=-180,->] (HandleChoose1);
+  \draw (DoFail) edge[xshift=0.5cm,out=0,in=-360,->] (HandleChoose2);
+\end{tikzpicture}
+\caption{Runtime representation of the computation \lstinline$maybeResult(randomResult(drunkToss))$.}\label{fig:rtstack}
+\end{figure}
 
 \section{Optimisations}
 It is rather conservative to implement every handler as multi-shot. We
@@ -220,30 +264,30 @@ representations \cite{Bruggeman1996}.  We use Links' linear type
 system to track the linearity of handlers. This enable us to
 specialise the implementation of handlers during code generation.
 
-\paragraph{Fusion} Handler fusion is a technique to prune the run-time
-stack. Consider the composition
-\lstinline$maybeResult(randomResult(toss))$. It gives
-rise to a stack with two handlers.  We may use row types to guide when
-handler fusion is sound. A necessary criterion for fusion of two
-handlers is that the intersection of their effect signatures is
-empty. We fuse handlers clause by clause, thus for
-\lstinline$maybeResult$ and \lstinline$randomResult$ we obtain:
-\begin{lstlisting}
-sig fused : (Comp({Choose:Bool,Fail:Zero |e}, a)) ->
-             Comp({Choose{_}  ,Fail{_}   |e}, Maybe(a))
-handler fused {
-  case Return(x) -> var y = x; Just(y)
-  case Fail(_)   -> Nothing
-  case Choose(k) -> k(random() > 0.5)
-}
-\end{lstlisting}
+% \paragraph{Fusion} Handler fusion is a technique to prune the run-time
+% stack. Consider the composition
+% \lstinline$maybeResult(randomResult(toss))$. It gives
+% rise to a stack with two handlers.  We may use row types to guide when
+% handler fusion is sound. A necessary criterion for fusion of two
+% handlers is that the intersection of their effect signatures is
+% empty. We fuse handlers clause by clause, thus for
+% \lstinline$maybeResult$ and \lstinline$randomResult$ we obtain:
+% \begin{lstlisting}
+% sig fused : (Comp({Choose:Bool,Fail:Zero |e}, a)) ->
+%              Comp({Choose{_}  ,Fail{_}   |e}, Maybe(a))
+% handler fused {
+%   case Return(x) -> var y = x; Just(y)
+%   case Fail(_)   -> Nothing
+%   case Choose(k) -> k(random() > 0.5)
+% }
+% \end{lstlisting}
 
-\paragraph{Inlining} Operation inlining enables us to replace abstract
-operations with their implementations, when these are statically
-resolvable. Furthermore, the handler must affine and the operation
-clause must invoke the continuation in tail position. For example, in
-the application \lstinline$randomResult(toss)$ we may replace
-\lstinline$do Choose$ with the computation \lstinline$random() > 0.5$ at compile-time.
+% \paragraph{Inlining} Operation inlining enables us to replace abstract
+% operations with their implementations, when these are statically
+% resolvable. Furthermore, the handler must affine and the operation
+% clause must invoke the continuation in tail position. For example, in
+% the application \lstinline$randomResult(toss)$ we may replace
+% \lstinline$do Choose$ with the computation \lstinline$random() > 0.5$ at compile-time.
 
 \section{Acknowledgements}
 The first author was supported by EPSRC CDT in Pervasive Parallelism
