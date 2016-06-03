@@ -114,14 +114,29 @@
   signatures from their implementation. We present a compiler for the
   experimental language Links with effect handlers.
 \dhil{TODO: Mention the OCaml backend}
-
 \end{abstract}
 
 \section{Motivation}
 Algebraic effects and effect handlers \cite{Plotkin2013} afford a
 modular and structured interface for programming with delimited
-continuations.
-\dhil{TODO: Motivation regarding the efficiency of handlers.}
+continuations. We have retrofitting the experimental, functional
+programming language Links with algebraic effects and effect handlers
+\cite{Hillerstrom2016}. Furthermore, Links uses row types to provide
+extensible effect typing.
+
+Links was originally conceived as a single language for multi-tier
+web-programming \cite{Cooper2006}. The Links infrastructure is
+comprised of three backends:
+\begin{enumerate*}[label={\roman*)}]
+ \item JavaScript based client-side,
+ \item interpreted Links server-side,
+ \item and a SQL database backend.
+\end{enumerate*}
+We have implemented a compiler to complement to the server-side
+backend. Our compiler interfaces directly with the OCaml Multicore
+backend \cite{Dolan2015}. By taking advantage of the OCaml backend we
+obtain both native code compilation support and the OCaml toolchain
+for free.
 
 \kc{The paper as it stands now does not mention why, but only deals with the
 question of how. We should mention the current Links backends, and say they
@@ -132,10 +147,10 @@ free by targetting multicore OCaml}.
 
 Previous work focuses mostly on the design and abstraction of
 handlers, but recent work has begun exploring efficient
-implementations of handlers. Some notable mentions are the OCaml
-Multicore project \cite{Dolan2015}, \citet{Kammar2013} embedding in
-Haskell, \citet{Kiselyov2015} \emph{freer monad} implementation in
-Haskell, and \citet{Wu2015} fusion optimisation for (deep) handlers.
+implementations of handlers. Some notable mentions are
+\citet{Kammar2013} embedding in Haskell, \citet{Kiselyov2015}
+\emph{freer monad} implementation in Haskell, and \citet{Wu2015}
+fusion optimisation for (deep) handlers.
 
 \section{Affine and multi-shot effect handlers}
 An algebraic effect is given by a signature of \emph{abstract
