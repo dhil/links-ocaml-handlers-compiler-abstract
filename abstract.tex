@@ -11,6 +11,8 @@
 \usepackage{xcolor}                  % Colours
 \usepackage[inline]{enumitem}        % Inline enumerations
 \usepackage{drawstack}               % Syntactic sugar for tikz for drawing run-time stacks
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
 \usepackage{listings}                % Source code listings
 
 \lstset{
@@ -120,16 +122,16 @@
 Algebraic effects and effect handlers \cite{Plotkin2013} afford a
 modular and structured interface for programming with delimited
 continuations. We have retrofitting the experimental, functional
-programming language Links with algebraic effects and effect handlers
-\cite{Hillerstrom2016}. Furthermore, Links uses row types to provide
+programming language Links with algebraic effects and handlers
+\cite{Hillerstrom2016}. Furthermore, Links uses row polymorphism to provide
 extensible effect typing.
 
 Links was originally conceived as a single language for multi-tier
 web-programming \cite{Cooper2006}. The Links infrastructure is
 comprised of three backends:
 \begin{enumerate*}[label={\roman*)}]
- \item JavaScript based client-side,
- \item interpreted Links server-side,
+ \item a JavaScript based client-side,
+ \item an interpreted Links server-side,
  \item and a SQL database backend.
 \end{enumerate*}
 We have implemented a compiler to complement to the server-side
@@ -138,12 +140,12 @@ backend \cite{Dolan2015}. By taking advantage of the OCaml backend we
 obtain both native code compilation support and the OCaml toolchain
 for free.
 
-\kc{The paper as it stands now does not mention why, but only deals with the
-question of how. We should mention the current Links backends, and say they
-they are only interpreted. The goal of the project is to add support for
-natively compiled backend for Links through Multicore OCaml, but also take
-advantage of multicore support and efficient JS compilation that will come for
-free by targetting multicore OCaml}.
+% \kc{The paper as it stands now does not mention why, but only deals with the
+% question of how. We should mention the current Links backends, and say they
+% they are only interpreted. The goal of the project is to add support for
+% natively compiled backend for Links through Multicore OCaml, but also take
+% advantage of multicore support and efficient JS compilation that will come for
+% free by targetting multicore OCaml}.
 
 Previous work focuses mostly on the design and abstraction of
 handlers, but recent work has begun exploring efficient
@@ -236,7 +238,30 @@ option of explicitly cloning them. Do also mention that OCaml does not have
 effect typing.}
 
 \section{Compiler infrastructure}
-\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
+%\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
+We reuse most of the previous Links infrastructure. The Links frontend
+is type-checked and translated into a small, typed intermediate
+language in \emph{A-normal form} (ANF). The Links interpreter
+implements a generalised CEK machine \cite{Hillerstrom2016}, which
+interprets ANF code.
+
+Our compilation strategy is to translate the Links ANF language into
+the OCaml \emph{Lambda} language. The OCaml backend exposes a
+hierarchy of intermediate languages, where the top language is known
+as Lambda. The Lambda language is a relatively small, untyped,
+direct-style lambda calculus. There are several semantic differences
+between Links and OCaml, e.g. Links employs structural typing, whilst
+OCaml predominantly employs nominal typing. In particular, Links
+employs row typing to for effects, records, and variants, whereas
+OCaml only supports row typing for the latter. Exhibiting a faithful
+translation from Links to OCaml amounts to a lot of value
+boxing. Thus, we target Lambda for greater flexibility and control.
+We effectively subvert OCaml's typechecker by targetting Lambda,
+however the translation is safe as Links programs are already
+typechecked. Furthermore, by targetting Lambda rather than other
+intermediate languages we achieve maximum flexibility as Lambda can be
+translated into either OCaml byte code or native code.
+
 \kc{Mention that the compilation strategy targets OCaml's Lambda intermediate
 code. Mention the reasons behind this choice, which seems unintuitive to a
 casual reader. The reason being that fundamentally, Links' type-system is more
@@ -245,13 +270,6 @@ faithfully translated to surface OCaml syntax. By targetting Lambda, we subvert
 OCaml's typechecker, but since the Links programs are typechecked already, the
 translation is safe.}
 
-This compiler is our first attempt at compiling
-Links\footnote{Presently, we compile only a subset of Links including
-  effect handlers.} to native code. Until now Links used to be
-translated into an intermediate language in A-normal form (ANF), which
-was interpreted using a generalised CEK machine
-\cite{Hillerstrom2016}.
-
 OCaml supports only affine handlers. Multiple invocations of a
 continuation causes a run-time error.  In contrast to OCaml, our
 implementation supports multi-shot handlers. In fact, we use
@@ -259,31 +277,31 @@ implementation supports multi-shot handlers. In fact, we use
 
 \kc{$Obj.clone$ was too generic and I plan to use $Obj.clone\_continuation$ to
 be less ambiguous.}
-\begin{figure}
-\begin{tikzpicture}
-  \drawstruct{(4.5,2)}
-  \structcell{\lstinline$do Choose$}  \coordinate (DoChoose) at (currentcell.west);
-  \structcell{$\cdots$}
-  \structcell{\lstinline$do Fail$} \coordinate (DoFail) at (currentcell.east);
-  \structcell{\lstinline$Return-clause$}
-  \structcell{\lstinline[keywordstyle=\footnotesize]$Exception handler$}
-  \structcell{\lstinline$Choose-clause$} \coordinate (HandleChoose1) at (currentcell.west); \coordinate (HandleChoose2) at (currentcell.east);
-  \structcell{$\cdot$} \coordinate (H1) at (currentcell.west);
+% \begin{figure}
+% \begin{tikzpicture}
+%   \drawstruct{(4.5,2)}
+%   \structcell{\lstinline$do Choose$}  \coordinate (DoChoose) at (currentcell.west);
+%   \structcell{$\cdots$}
+%   \structcell{\lstinline$do Fail$} \coordinate (DoFail) at (currentcell.east);
+%   \structcell{\lstinline$Return-clause$}
+%   \structcell{\lstinline[keywordstyle=\footnotesize]$Exception handler$}
+%   \structcell{\lstinline$Choose-clause$} \coordinate (HandleChoose1) at (currentcell.west); \coordinate (HandleChoose2) at (currentcell.east);
+%   \structcell{$\cdot$} \coordinate (H1) at (currentcell.west);
 
-  \drawstruct{(0,0)}
-  \structcell{$\cdots$} \coordinate (H2) at (currentcell.east);
-  \structcell{\lstinline$Return-clause$}
-  \structcell{\lstinline[keywordstyle=\footnotesize]$Exception handler$}
-  \structcell{\lstinline$Fail-clause$}
-  \structcell{$\bot$}
+%   \drawstruct{(0,0)}
+%   \structcell{$\cdots$} \coordinate (H2) at (currentcell.east);
+%   \structcell{\lstinline$Return-clause$}
+%   \structcell{\lstinline[keywordstyle=\footnotesize]$Exception handler$}
+%   \structcell{\lstinline$Fail-clause$}
+%   \structcell{$\bot$}
 
-%  \draw[<-] (H2) .. controls ([yshift=0cm] H2) and ([xshift=-10cm,yshift=4cm] H1) .. (H1);
-  \draw (H2) edge[out=-20,in=-175,<-] (H1);
-  \draw (DoChoose) edge[out=175,in=-180,->] (HandleChoose1);
-  \draw (DoFail) edge[xshift=0.5cm,out=0,in=-360,->] (HandleChoose2);
-\end{tikzpicture}
-\caption{Runtime representation of the computation \lstinline$maybeResult(randomResult(drunkToss))$.}\label{fig:rtstack}
-\end{figure}
+% %  \draw[<-] (H2) .. controls ([yshift=0cm] H2) and ([xshift=-10cm,yshift=4cm] H1) .. (H1);
+%   \draw (H2) edge[out=-20,in=-175,<-] (H1);
+%   \draw (DoChoose) edge[out=175,in=-180,->] (HandleChoose1);
+%   \draw (DoFail) edge[xshift=0.5cm,out=0,in=-360,->] (HandleChoose2);
+% \end{tikzpicture}
+% \caption{Runtime representation of the computation \lstinline$maybeResult(randomResult(drunkToss))$.}\label{fig:rtstack}
+% \end{figure}
 
 \section{Optimisations}
 It is rather conservative to implement every handler as multi-shot. We
@@ -329,7 +347,8 @@ specialise the implementation of handlers during code generation.
 \section{Acknowledgements}
 The first author was supported by EPSRC CDT in Pervasive Parallelism
 (grant EP/L01503X/1).  The second author was supported by EPSRC grant
-number EP/K034413/1.  Thanks to OCaml Labs\dots
+number EP/K034413/1.  This work was done in collaboration with OCaml
+Labs.
 
 \bibliographystyle{abbrvnat} \softraggedright
 \bibliography{references}
