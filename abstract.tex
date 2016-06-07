@@ -119,26 +119,34 @@
 \end{abstract}
 
 \section{Motivation}
+
+\sam{this paragraph needs to be a bit more focused}
+
 Algebraic effects and effect handlers \cite{Plotkin2013} afford a
 modular and structured interface for programming with delimited
-continuations. We have retrofitting the experimental, functional
+continuations. In previous work, we extended the functional web
 programming language Links with algebraic effects and handlers
-\cite{Hillerstrom2016}. Furthermore, Links uses row polymorphism to provide
+\cite{Hillerstrom2016}. Links uses row polymorphism to provide
 extensible effect typing.
 
-Links was originally conceived as a single language for multi-tier
-web-programming \cite{Cooper2006}. The Links infrastructure is
-comprised of three backends:
+\sam{cite Daniel's master's thesis as well as the draft}
+
+Links is a single language for multi-tier web-programming
+\cite{Cooper2006}. It has three backends:
 \begin{enumerate*}[label={\roman*)}]
- \item a JavaScript based client-side,
- \item an interpreted Links server-side,
- \item and a SQL database backend.
+ \item a JavaScript compiler for the client,
+ \item an interpreter for the server,
+ \item and an SQL generator for the database.
 \end{enumerate*}
-We have implemented a compiler to complement to the server-side
-backend. Our compiler interfaces directly with the OCaml Multicore
-backend \cite{Dolan2015}. By taking advantage of the OCaml backend we
-obtain both native code compilation support and the OCaml toolchain
-for free.
+Currently effect handlers are only supported on the server; in future
+we intend to extend the JavaScript compiler to support them too.
+
+In order to improve performance, and to study efficient compilation of
+effect handlers in general, we have implemented a compiler to replace
+the interpreter. Our compiler interfaces directly with the OCaml
+Multicore backend \cite{Dolan2015}. By taking advantage of the OCaml
+backend we obtain both native code compilation support and the OCaml
+toolchain for free.
 
 % \kc{The paper as it stands now does not mention why, but only deals with the
 % question of how. We should mention the current Links backends, and say they
@@ -147,12 +155,23 @@ for free.
 % advantage of multicore support and efficient JS compilation that will come for
 % free by targetting multicore OCaml}.
 
-Previous work focuses mostly on the design and abstraction of
-handlers, but recent work has begun exploring efficient
-implementations of handlers. Some notable mentions are
-\citet{Kammar2013} embedding in Haskell, \citet{Kiselyov2015}
-\emph{freer monad} implementation in Haskell, and \citet{Wu2015}
-fusion optimisation for (deep) handlers.
+Prior work focuses mainly on the design and expressiveness of handlers
+rather than performance. Nevertheless, several papers do address
+performance. \citet{Kammar2013} take advantage of Haskell's aggressive
+fusion optimisations for an efficient Haskell library for handlers, as
+explained in detail by \citet{Wu2015}. \citet{Kiselyov2015} also
+optimise a different Haskell library for handlers, taking advantage of
+prior work on optimising monadic reflection~\citep{PloegK14}. Our work
+differs from these systems in that we compile effect handlers
+directly, rather than via library.
+
+
+%% but recent work has begun exploring efficient implementations of
+%% handlers.
+%% %
+%% Some notable mentions are \citet{Kammar2013} embedding in Haskell,
+%% \citet{Kiselyov2015} \emph{freer monad} implementation in Haskell, and
+%% \citet{Wu2015} fusion optimisation for (deep) handlers.
 
 \section{Affine and multi-shot effect handlers}
 An algebraic effect is given by a signature of \emph{abstract
