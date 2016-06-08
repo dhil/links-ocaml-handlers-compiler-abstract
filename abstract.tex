@@ -11,8 +11,6 @@
 \usepackage{xcolor}                  % Colours
 \usepackage[inline]{enumitem}        % Inline enumerations
 \usepackage{drawstack}               % Syntactic sugar for tikz for drawing run-time stacks
-\usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows}
 \usepackage{listings}                % Source code listings
 
 \lstset{
@@ -63,6 +61,13 @@
 
 \lstset{style={links}}
 
+% OCaml style
+\lstdefinestyle{ocaml}{
+  basicstyle=\linespread{1.0}\ttfamily\footnotesize,
+  language=Caml,
+  morekeywords={effect}
+}
+
 %% TODOs and comments
 \newcommand{\msgbox}[2]{{%
   \par\noindent\small\color{red}%
@@ -91,11 +96,11 @@
 \newcommand{\contact}[2]{#1@#2}
 \newcommand{\reachme}[1]{\hyperlink{mailto:\contact{#1}}{\contact{#1}}}
 
-\titlebanner{DRAFT}    % These are ignored unless
+\titlebanner{DRAFT -- Extended Abstract}    % These are ignored unless
 \preprintfooter{} % 'preprint' option specified.
 
 \title{Towards Compilation of Affine Algebraic Effect Handlers}
-\subtitle{-- Extended Abstract --}
+%\subtitle{-- Extended Abstract --}
 \authorinfo{Daniel Hillerström}
            {The University of Edinburgh}
            {~}%{\reachme{daniel.hillerstrom}}
@@ -126,10 +131,8 @@ Algebraic effects and effect handlers \cite{Plotkin2013} afford a
 modular and structured interface for programming with delimited
 continuations. In previous work, we extended the functional web
 programming language Links with algebraic effects and handlers
-\cite{Hillerstrom2016}. Links uses row polymorphism to provide
+\cite{Hillerstrom2015,Hillerstrom2016}. Links uses row polymorphism to provide
 extensible effect typing.
-
-\sam{cite Daniel's master's thesis as well as the draft}
 
 Links is a single language for multi-tier web-programming
 \cite{Cooper2006}. It has three backends:
@@ -248,16 +251,21 @@ The type system prevents invocation of the continuation in the an
 inhabitants. Linear and exception handlers constitute \emph{affine
   handlers}.
 
-\kc{This section is too long. Can we make this section into a background one,
-where we introduce Links (mention handlers, row polymorphism, effect system)
-and also introduce OCaml's effect handlers (efficient, direct-style
-implementation of continuations i.e, not CPS but heap-managed stack
-datastructure). Mention that OCaml provides one-shot affine handlers with the
-option of explicitly cloning them. Do also mention that OCaml does not have
-effect typing.}
+% \kc{This section is too long. Can we make this section into a background one,
+% where we introduce Links (mention handlers, row polymorphism, effect system)
+% and also introduce OCaml's effect handlers (efficient, direct-style
+% implementation of continuations i.e, not CPS but heap-managed stack
+% datastructure). Mention that OCaml provides one-shot affine handlers with the
+% option of explicitly cloning them. Do also mention that OCaml does not have
+% effect typing.}
 
 \section{Compiler infrastructure}
 %\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
+\begin{figure}
+  \centering
+  \includegraphics[scale=0.5]{infrastructure.eps}
+  \caption{High-level overview of the compiler components.}\label{fig:infra-diagram}
+\end{figure}
 We reuse most of the previous Links infrastructure. The Links frontend
 is type-checked and translated into a small, typed intermediate
 language in \emph{A-normal form} (ANF). The Links interpreter
@@ -265,37 +273,39 @@ implements a generalised CEK machine \cite{Hillerstrom2016}, which
 interprets ANF code.
 
 Our compilation strategy is to translate the Links ANF language into
-the OCaml \emph{Lambda} language. The OCaml backend exposes a
-hierarchy of intermediate languages, where the top language is known
-as Lambda. The Lambda language is a relatively small, untyped,
-direct-style lambda calculus. There are several semantic differences
-between Links and OCaml, e.g. Links employs structural typing, whilst
-OCaml predominantly employs nominal typing. In particular, Links
-employs row typing to for effects, records, and variants, whereas
-OCaml only supports row typing for the latter. Exhibiting a faithful
-translation from Links to OCaml amounts to a lot of value
-boxing. Thus, we target Lambda for greater flexibility and control.
-We effectively subvert OCaml's typechecker by targetting Lambda,
-however the translation is safe as Links programs are already
-typechecked. Furthermore, by targetting Lambda rather than other
-intermediate languages we achieve maximum flexibility as Lambda can be
-translated into either OCaml byte code or native code.
+the OCaml \emph{Lambda} language, which is a small, untyped lambda
+calculus. The OCaml backend exposes a hierarchy of intermediate
+representations (IRs), where the top representation is known as
+Lambda. As shown in the Figure \ref{fig:infra-diagram} the Lambda IR
+can be translated either into byte or native code.
+%
+Alternatively, we could target a lower level IR such as
+\emph{Flambda}, which is an IR intended for high-level
+optimisations. Flambda is reminiscent of the Links IR as it is in
+ANF. However, it is deep into the native compilation pipeline,
+therefore by targetting Lambda rather than Flambda, we achieve maximum
+flexibility as a translation into byte code, in principle, enables us
+to take advantage of custom backends such as \texttt{js\_of\_ocaml} to
+produce JavaScript.
 
-\kc{Mention that the compilation strategy targets OCaml's Lambda intermediate
-code. Mention the reasons behind this choice, which seems unintuitive to a
-casual reader. The reason being that fundamentally, Links' type-system is more
-expressive than OCaml's (row-polymorohism) and hence Links programs cannot be
-faithfully translated to surface OCaml syntax. By targetting Lambda, we subvert
-OCaml's typechecker, but since the Links programs are typechecked already, the
-translation is safe.}
+There are several semantic differences between Links and OCaml,
+e.g. Links employs structural typing, whilst OCaml predominantly
+employs nominal typing. In particular, Links employs row typing for
+effects, records, and variants, whereas OCaml only supports row typing
+for the latter. Exhibiting a faithful translation from Links to OCaml
+amounts to a lot of value boxing. Thus, we target Lambda for greater
+flexibility and control.  We effectively subvert OCaml's typechecker
+by targetting Lambda, however the translation is safe as Links
+programs are already typechecked.
 
-OCaml supports only affine handlers. Multiple invocations of a
-continuation causes a run-time error.  In contrast to OCaml, our
-implementation supports multi-shot handlers. In fact, we use
-\lstinline$Obj.clone$ to encode multi-shot handlers.
+% \kc{Mention that the compilation strategy targets OCaml's Lambda intermediate
+% code. Mention the reasons behind this choice, which seems unintuitive to a
+% casual reader. The reason being that fundamentally, Links' type-system is more
+% expressive than OCaml's (row-polymorohism) and hence Links programs cannot be
+% faithfully translated to surface OCaml syntax. By targetting Lambda, we subvert
+% OCaml's typechecker, but since the Links programs are typechecked already, the
+% translation is safe.}
 
-\kc{$Obj.clone$ was too generic and I plan to use $Obj.clone\_continuation$ to
-be less ambiguous.}
 % \begin{figure}
 % \begin{tikzpicture}
 %   \drawstruct{(4.5,2)}
@@ -321,6 +331,44 @@ be less ambiguous.}
 % \end{tikzpicture}
 % \caption{Runtime representation of the computation \lstinline$maybeResult(randomResult(drunkToss))$.}\label{fig:rtstack}
 % \end{figure}
+
+\section{Runtime representation}
+By using the OCaml backend we naturally inherit the OCaml
+run-time. OCaml implements effect handlers as heap-managed stack data
+structures as a consequence composition of handlers gives rise to
+$n$-element stacks at run-time. For example, the composition
+\lstinline[mathescape]!randomResult(maybeResult($\cdot$))! gives rise
+to a two-element stack. OCaml provides only affine handlers. Thus, an
+invocation of an abstract operation amounts to a dynamic lookup for a
+suitable handler in a stack.
+
+Furthermore, OCaml supports only affine handlers, because OCaml
+implements only efficient, one-shot continuations. Multiple
+invocations of a continuation causes a run-time error. Although,
+multi-shot handlers can be simulated by manually cloning continuations
+using \lstinline$Obj.clone$. However, this provide a fragile
+abstraction, because if the handler stack contains at least one
+multi-shot handler, then every affine handler in the stack most be
+demoted to a multi-shot handler. The reason for this is that a
+multi-shot handler may consume a linear continuation more than
+once. Consequently, multi-shot handlers in OCaml breaks modularity.
+
+In the Links compiler we use the cloning capability under the hood to
+implement multi-shot handlers. For example, our encoding of
+\lstinline$allResults$ amounts to the following in plain OCaml:
+% \kc{$Obj.clone$ was too generic and I plan to use $Obj.clone\_continuation$ to
+% be less ambiguous.}
+\begin{lstlisting}[style=ocaml]
+let all_results m = match m () with
+  | x -> [x]
+  | effect Choose k -> 
+      let k' arg = continue (Obj.clone k) arg in
+      k' true @ k' false
+\end{lstlisting}
+OCaml provides a unified syntax for pattern-matching on regular,
+effect, and exception patterns. The keyword
+\lstinline[style=ocaml]$effect$ begins an operation match. By default we implement every handler
+as a multi-shot handler.
 
 \section{Optimisations}
 It is rather conservative to implement every handler as multi-shot. We
@@ -366,13 +414,11 @@ specialise the implementation of handlers during code generation.
 % \lstinline$do Choose$ with the computation \lstinline$random() > 0.5$ at compile-time.
 
 \section{Acknowledgements}
-The first author was supported by EPSRC CDT in Pervasive Parallelism
-(grant EP/L01503X/1).  The second author was supported by EPSRC grant
-number EP/K034413/1.  This work was done in collaboration with OCaml
-Labs.
+The first and second authors were supported by EPSRC grants CDT in
+Pervasive Parallelism (EP/L01503X/1) and EP/K034413/1,
+respectively.  This work is collaborative work with OCaml Labs.
 
 \bibliographystyle{abbrvnat} \softraggedright
 \bibliography{references}
-\todo{Minify bibliography}
 
 \end{document}
