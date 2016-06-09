@@ -124,6 +124,7 @@
 \end{abstract}
 
 \section{Motivation}
+\kc{if you find yourself short of space, I'd axe some of this section.}
 
 % \sam{this paragraph needs to be a bit more focused}
 % Algebraic effects and effect handlers \cite{Plotkin2013} afford a
@@ -380,7 +381,15 @@ passes its argument to a fresh copy of the actual continuation. The
 continuation and a value, it invokes the continuation with that particular
 value. By default we implement every handler as a multi-shot handler.
 
+\kc{Can we have a small table or something that provides initial results?
+Doesn't need to be extensive. I'd just do Queens, Nim, Chameneos? Otherwise, it
+is unclear what the talk will be about.}.
+
 \section{Optimisations}
+\kc{Rather than talking about this as something you would do in the future, I'd
+write it as current work. In particular, avoid "we plan". I am sure some of
+this work will be done by September. This will form the meat of your actual
+talk I'd think.}
 It is rather conservative to implement every handler as multi-shot. We
 would like to recover the efficiency of affine handlers, but without
 sacrificing the the abstraction.
