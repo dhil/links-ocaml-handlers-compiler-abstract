@@ -117,10 +117,10 @@
 
 \begin{abstract}
   Algebraic effects and handlers provide a modular abstraction for
-  effectful programming that allow programmers to separate effect
-  signatures from their implementation. We present a compiler for the
-  experimental language Links with effect handlers.
-\dhil{TODO: Mention the OCaml backend}
+  modelling and controlling computational effects. We present a
+  compiler for the experimental language Links with effect
+  handlers. Our compiler interfaces with the Multicore OCaml backend
+  to take advantage of OCaml's implementation of efficient handlers.
 \end{abstract}
 
 \section{Motivation}
@@ -263,8 +263,8 @@ inhabitants. Linear and exception handlers constitute \emph{affine
 %\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
 \begin{figure}
   \centering
-  \includegraphics[scale=0.5]{infrastructure.eps}
-  \caption{High-level overview of the compiler components.}\label{fig:infra-diagram}
+  \includegraphics[scale=0.5]{infrastructure-alt.eps}
+  \caption{Lambda is the first IR in the OCaml backend. It can be compiled to either byte or native code.}\label{fig:infra-diagram}
 \end{figure}
 We reuse most of the previous Links infrastructure. The Links frontend
 is type-checked and translated into a small, typed intermediate
@@ -277,16 +277,21 @@ the OCaml \emph{Lambda} language, which is a small, untyped lambda
 calculus. The OCaml backend exposes a hierarchy of intermediate
 representations (IRs), where the top representation is known as
 Lambda. As shown in the Figure \ref{fig:infra-diagram} the Lambda IR
-can be translated either into byte or native code.
+offers two different compilation options: byte code and native code.
+Therefore by targetting Lambda rather than a lower level IR, we
+achieve maximum flexibility as a translation into byte code, in
+principle, enables us to take advantage of custom backends such as
+\texttt{js\_of\_ocaml} to produce efficient JavaScript.
+
 %
-Alternatively, we could target a lower level IR such as
-\emph{Flambda}, which is an IR intended for high-level
-optimisations. Flambda is reminiscent of the Links IR as it is in
-ANF. However, it is deep into the native compilation pipeline,
-therefore by targetting Lambda rather than Flambda, we achieve maximum
-flexibility as a translation into byte code, in principle, enables us
-to take advantage of custom backends such as \texttt{js\_of\_ocaml} to
-produce JavaScript.
+% Alternatively, we could target a lower level IR such as
+% \emph{Flambda}, which is an IR intended for high-level
+% optimisations. Flambda is reminiscent of the Links IR as it is in
+% ANF. However, it is deep into the native compilation pipeline,
+% therefore by targetting Lambda rather than Flambda, we achieve maximum
+% flexibility as a translation into byte code, in principle, enables us
+% to take advantage of custom backends such as \texttt{js\_of\_ocaml} to
+% produce JavaScript.
 
 There are several semantic differences between Links and OCaml,
 e.g. Links employs structural typing, whilst OCaml predominantly
@@ -367,26 +372,36 @@ let all_results m = match m () with
 \end{lstlisting}
 OCaml provides a unified syntax for pattern-matching on regular,
 effect, and exception patterns. The keyword
-\lstinline[style=ocaml]$effect$ begins an operation match. By default we implement every handler
-as a multi-shot handler.
+\lstinline[style=ocaml]$effect$ begins an
+operation-clause. Essentially, we create a local function
+\lstinline$k'$, which wraps the actual continuation \lstinline$k$. An
+invocation of \lstinline$k'$ passes its argument to a fresh copy of
+the actual continuation. The \lstinline$continue$ function is provided
+by the standard library; given a continuation and a value, it invokes
+the continuation with that particular value. By default we implement
+every handler as a multi-shot handler.
 
 \section{Optimisations}
 It is rather conservative to implement every handler as multi-shot. We
-would like to recover the efficiency of affine handlers.
-\kc{Even without the optimizations, I expect Links compiled to OCaml to be
-faster than the interpreted version. Compare the performance on Queens? By
-varying the board size:
-https://github.com/kayceesrk/ocaml-eff-example/blob/master/queens.ml}
+would like to recover the efficiency of affine handlers, but without
+sacrificing the the abstraction.
+% \kc{Even without the optimizations, I expect Links compiled to OCaml to be
+% faster than the interpreted version. Compare the performance on Queens? By
+% varying the board size:
+% https://github.com/kayceesrk/ocaml-eff-example/blob/master/queens.ml}
 
 \paragraph{Linearisation}
-It is well-known that linear continuations have efficient
-representations \cite{Bruggeman1996}.  We plan to use Links' linear
-type system to track the linearity of handlers. This enable us to
-specialise the implementation of handlers during code generation.
+Handlers that use their continuations linearly should be promoted to
+linear handlers at compile time.  We plan to use Links' linear type
+system to track the linearity of handlers.
 
-\paragraph{Handler resolution} \dots \dhil{Mapping operations directly to suitable clauses.}
+\paragraph{Handler resolution} 
+Traversing a large handler stack is likely to be costly. If the
+handler stack, or part of it, is known at statically, then we can
+instantiate abstract operations at compile time.
 
-\paragraph{Effect specialisation} \dots \dhil{Track the linearity of effects also!}
+\paragraph{Linear effects} \dots
+\dhil{Let programmers annotate effects with linearity to give performance guarantees.}
 
 % \paragraph{Fusion} Handler fusion is a technique to prune the run-time
 % stack. Consider the composition
