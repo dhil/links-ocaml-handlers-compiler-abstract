@@ -99,7 +99,7 @@
 \titlebanner{DRAFT -- Extended Abstract}    % These are ignored unless
 \preprintfooter{} % 'preprint' option specified.
 
-\title{Towards Compilation of Affine Algebraic Effect Handlers}
+\title{Compiling Effect Handlers}
 %\subtitle{-- Extended Abstract --}
 \authorinfo{Daniel Hillerström}
            {The University of Edinburgh}
@@ -353,12 +353,12 @@ Since the primary use of handlers in OCaml is the express concurrency, OCaml
 handlers are affine; continuations can only be resumed at most once, and
 multiple invocations of a continuation causes a run-time error. Multi-shot
 handlers can be simulated by manually cloning continuations using
-\lstinline$Obj.clone\_continuation$. The cost of cloning is linear in the size
+\lstinline$Obj.clone_continuation$. The cost of cloning is linear in the size
 of the handler stack. However, cloning is a fragile abstraction; if the handler
 stack contains at least one multi-shot handler, then every affine handler in
 the stack must be demoted to a multi-shot handler to be safe. The reason for
 this is that a multi-shot handler may consume a linear continuation more than
-once. Consequently, multi-shot handlers in OCaml breaks modularity.
+once. Consequently, multi-shot handlers in OCaml break modularity.
 
 In the Links compiler we use the cloning capability under the hood to implement
 multi-shot handlers. For example, our encoding of \lstinline$allResults$
@@ -367,10 +367,11 @@ amounts to the following in plain OCaml:
 % be less ambiguous.}
 \begin{lstlisting}[style=ocaml]
 let all_results m = match m () with
-  | x -> [x]
-  | effect Choose k ->
-      let k' arg = continue (Obj.clone_continuation k) arg in
-      k' true @ k' false
+ | x -> [x]
+ | effect Choose k -> 
+   let k' arg = 
+     continue (Obj.clone_continuation k) arg 
+   in k' true @ k' false
 \end{lstlisting}
 OCaml provides a unified syntax for pattern-matching on regular, effect, and
 exception patterns. The keyword \lstinline[style=ocaml]$effect$ begins an
@@ -400,16 +401,13 @@ sacrificing the the abstraction.
 
 \paragraph{Linearisation}
 Handlers that use their continuations linearly should be promoted to
-linear handlers at compile time. We plan to use Links' linear type
-system to track the linearity of handlers.
+linear handlers at compile time. We will use Links' linear type system to
+track the linearity of handlers.
 
 \paragraph{Handler resolution}
 Traversing a large handler stack is likely to be costly. If the
 handler stack, or part of it, is known statically, then we can
 instantiate abstract operations at compile time.
-
-\paragraph{Linear effects} \dots
-\dhil{Let programmers annotate effects with linearity to give performance guarantees.}
 
 % \paragraph{Fusion} Handler fusion is a technique to prune the run-time
 % stack. Consider the composition
