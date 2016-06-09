@@ -125,14 +125,20 @@
 
 \section{Motivation}
 
-\sam{this paragraph needs to be a bit more focused}
+% \sam{this paragraph needs to be a bit more focused}
+% Algebraic effects and effect handlers \cite{Plotkin2013} afford a
+% modular and structured interface for programming with delimited
+% continuations. In previous work, we extended the functional web
+% programming language Links with algebraic effects and handlers
+% \cite{Hillerstrom2015,Hillerstrom2016}. Links uses row polymorphism to provide
+% extensible effect typing.
 
-Algebraic effects and effect handlers \cite{Plotkin2013} afford a
-modular and structured interface for programming with delimited
-continuations. In previous work, we extended the functional web
-programming language Links with algebraic effects and handlers
-\cite{Hillerstrom2015,Hillerstrom2016}. Links uses row polymorphism to provide
-extensible effect typing.
+Algebraic effects and handlers \cite{Plotkin2013} afford a compelling
+and modular alternative to monad transformers for controlling
+computational effects. In previous work, we extended the functional
+web programming language Links with algebraic effects and handlers
+\cite{Hillerstrom2015,Hillerstrom2016}. Links uses row polymorphism to
+provide extensible effect typing.
 
 Links is a single language for multi-tier web-programming
 \cite{Cooper2006}. It has three backends:
@@ -397,7 +403,7 @@ system to track the linearity of handlers.
 
 \paragraph{Handler resolution} 
 Traversing a large handler stack is likely to be costly. If the
-handler stack, or part of it, is known at statically, then we can
+handler stack, or part of it, is known statically, then we can
 instantiate abstract operations at compile time.
 
 \paragraph{Linear effects} \dots
