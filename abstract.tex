@@ -117,7 +117,7 @@
 
 \begin{abstract}
   Algebraic effects and handlers provide a modular abstraction for
-  modelling and controlling computational effects. We present a
+  modeling and controlling computational effects. We present a
   compiler for the experimental language Links with effect
   handlers. Our compiler interfaces with the Multicore OCaml backend
   to take advantage of OCaml's implementation of efficient handlers.
@@ -150,12 +150,11 @@ Links is a single language for multi-tier web-programming
 Currently effect handlers are only supported on the server; in future
 we intend to extend the JavaScript compiler to support them too.
 
-In order to improve performance, and to study efficient compilation of
-effect handlers in general, we have implemented a compiler to replace
-the interpreter. Our compiler interfaces directly with the OCaml
-Multicore backend \cite{Dolan2015}. By taking advantage of the OCaml
-backend we obtain both native code compilation support and the OCaml
-toolchain for free.
+In order to improve performance, and to study efficient compilation of effect
+handlers in general, we have implemented a Links compiler that targets the
+Multicore OCaml backend \cite{Dolan2015}. By taking advantage of the OCaml
+backend we obtain both native code compilation support and the OCaml toolchain
+for free.
 
 % \kc{The paper as it stands now does not mention why, but only deals with the
 % question of how. We should mention the current Links backends, and say they
@@ -183,23 +182,22 @@ directly, rather than via library.
 %% \citet{Wu2015} fusion optimisation for (deep) handlers.
 
 \section{Affine and multi-shot effect handlers}
-An algebraic effect is given by a signature of \emph{abstract
-  operations}. For example \emph{nondeterminism} is an algebraic
-effect that is given by a nondeterministic choice operation called
-\lstinline$Choose$. In Links, we may use this operation to implement a
-coin toss:
+This section provides a short primer to effect handlers in Links. An algebraic
+effect is given by a signature of \emph{abstract operations}. For example
+\emph{nondeterminism} is an algebraic effect that is given by a
+nondeterministic choice operation called \lstinline$Choose$. In Links, we may
+use this operation to implement a coin toss:
 %
 \lstinputlisting{snippets/toss.links}
 %
-This declares an \emph{abstract computation} \lstinline$toss$, which
-invokes an operation \lstinline$Choose$ using the \lstinline$do$
-primitive.  The \lstinline$sig$ keyword begins a signature, which
-reads: \lstinline$toss$ is a computation with effect signature
-\lstinline${Choose:Bool |e}$ and return value \lstinline$Toss$, whose
-constructors are \lstinline$Heads$ and \lstinline$Tails$.  Links
-employs row typing to support extensible effect signatures, thus
-\lstinline$e$ is an effect variable, which can be instantiated with
-additional operations.
+This declares an \emph{abstract computation} \lstinline$toss$, which invokes an
+operation \lstinline$Choose$ using the \lstinline$do$ primitive.  The
+\lstinline$sig$ keyword begins a signature, which reads: \lstinline$toss$ is a
+computation with effect signature \lstinline${Choose:Bool |e}$ and return value
+\lstinline$Toss$, whose constructors are \lstinline$Heads$ and
+\lstinline$Tails$.  Links employs row typing to support extensible effect
+signatures, thus \lstinline$e$ is an effect variable, which can be instantiated
+with additional operations.
 
 Introduction of another operation causes the effect signature to grow
 accordingly. For example, if we introduce an exception operation
@@ -278,15 +276,14 @@ language in \emph{A-normal form} (ANF). The Links interpreter
 implements a generalised CEK machine \cite{Hillerstrom2016}, which
 interprets ANF code.
 
-Our compilation strategy is to translate the Links ANF language into
-the OCaml \emph{Lambda} language, which is a small, untyped lambda
-calculus. The OCaml backend exposes a hierarchy of intermediate
-representations (IRs), where the top representation is known as
-Lambda. As shown in the Figure \ref{fig:infra-diagram} the Lambda IR
-offers two different compilation options: byte code and native code.
-Therefore by targetting Lambda rather than a lower level IR, we
-achieve maximum flexibility as a translation into byte code, in
-principle, enables us to take advantage of custom backends such as
+Our compilation strategy is to translate the Links ANF language into the OCaml
+\emph{Lambda} language, which is a small, untyped lambda calculus. The OCaml
+backend exposes a hierarchy of intermediate representations (IRs), where the
+top representation is known as Lambda. As shown in the Figure
+\ref{fig:infra-diagram}, the Lambda IR offers two different compilation
+options: byte code and native code. Therefore by targeting Lambda rather than
+a lower level IR, we achieve maximum flexibility as a translation into byte
+code, in principle, enables us to take advantage of custom backends such as
 \texttt{js\_of\_ocaml} to produce efficient JavaScript.
 
 %
@@ -299,15 +296,14 @@ principle, enables us to take advantage of custom backends such as
 % to take advantage of custom backends such as \texttt{js\_of\_ocaml} to
 % produce JavaScript.
 
-There are several semantic differences between Links and OCaml,
-e.g. Links employs structural typing, whilst OCaml predominantly
-employs nominal typing. In particular, Links employs row typing for
-effects, records, and variants, whereas OCaml only supports row typing
-for the latter. Exhibiting a faithful translation from Links to OCaml
-amounts to a lot of value boxing. Thus, we target Lambda for greater
-flexibility and control.  We effectively subvert OCaml's typechecker
-by targetting Lambda, however the translation is safe as Links
-programs are already typechecked.
+There are several semantic differences between Links and OCaml, e.g. Links
+employs structural typing, whilst OCaml predominantly employs nominal typing.
+In particular, Links employs row typing for effects, records, and variants,
+whereas OCaml only supports row typing for the latter. Exhibiting a faithful
+translation from Links to OCaml amounts to a lot of value boxing. Thus, we
+target Lambda for greater flexibility and control.  We effectively subvert
+OCaml's typechecker by targeting Lambda, however the translation is safe as
+Links programs are already typechecked.
 
 % \kc{Mention that the compilation strategy targets OCaml's Lambda intermediate
 % code. Mention the reasons behind this choice, which seems unintuitive to a
@@ -344,48 +340,45 @@ programs are already typechecked.
 % \end{figure}
 
 \section{Runtime representation}
-By using the OCaml backend we naturally inherit the OCaml
-run-time. OCaml implements effect handlers as heap-managed stack data
-structures as a consequence composition of handlers gives rise to
-$n$-element stacks at run-time. For example, the composition
-\lstinline[mathescape]!randomResult(maybeResult($\cdot$))! gives rise
-to a two-element stack. OCaml provides only affine handlers. Thus, an
-invocation of an abstract operation amounts to a dynamic lookup for a
-suitable handler in a stack.
+By using the OCaml backend we naturally inherit the OCaml run-time. OCaml
+implements effect handlers as heap-managed stack data structures, and as a
+consequence composition of handlers gives rise to $n$-element stacks at
+run-time. For example, the composition
+\lstinline[mathescape]!randomResult(maybeResult($\cdot$))! gives rise to a
+two-element stack. Thus, an invocation of an abstract operation amounts to a
+dynamic lookup for a suitable handler in a stack.
 
-Furthermore, OCaml supports only affine handlers, because OCaml
-implements only efficient, one-shot continuations. Multiple
-invocations of a continuation causes a run-time error. Although,
-multi-shot handlers can be simulated by manually cloning continuations
-using \lstinline$Obj.clone$. However, this provide a fragile
-abstraction, because if the handler stack contains at least one
-multi-shot handler, then every affine handler in the stack most be
-demoted to a multi-shot handler. The reason for this is that a
-multi-shot handler may consume a linear continuation more than
+Since the primary use of handlers in OCaml is the express concurrency, OCaml
+handlers are affine; continuations can only be resumed at most once, and
+multiple invocations of a continuation causes a run-time error. Multi-shot
+handlers can be simulated by manually cloning continuations using
+\lstinline$Obj.clone\_continuation$. The cost of cloning is linear in the size
+of the handler stack. However, cloning is a fragile abstraction; if the handler
+stack contains at least one multi-shot handler, then every affine handler in
+the stack must be demoted to a multi-shot handler to be safe. The reason for
+this is that a multi-shot handler may consume a linear continuation more than
 once. Consequently, multi-shot handlers in OCaml breaks modularity.
 
-In the Links compiler we use the cloning capability under the hood to
-implement multi-shot handlers. For example, our encoding of
-\lstinline$allResults$ amounts to the following in plain OCaml:
+In the Links compiler we use the cloning capability under the hood to implement
+multi-shot handlers. For example, our encoding of \lstinline$allResults$
+amounts to the following in plain OCaml:
 % \kc{$Obj.clone$ was too generic and I plan to use $Obj.clone\_continuation$ to
 % be less ambiguous.}
 \begin{lstlisting}[style=ocaml]
 let all_results m = match m () with
   | x -> [x]
-  | effect Choose k -> 
-      let k' arg = continue (Obj.clone k) arg in
+  | effect Choose k ->
+      let k' arg = continue (Obj.clone_continuation k) arg in
       k' true @ k' false
 \end{lstlisting}
-OCaml provides a unified syntax for pattern-matching on regular,
-effect, and exception patterns. The keyword
-\lstinline[style=ocaml]$effect$ begins an
-operation-clause. Essentially, we create a local function
-\lstinline$k'$, which wraps the actual continuation \lstinline$k$. An
-invocation of \lstinline$k'$ passes its argument to a fresh copy of
-the actual continuation. The \lstinline$continue$ function is provided
-by the standard library; given a continuation and a value, it invokes
-the continuation with that particular value. By default we implement
-every handler as a multi-shot handler.
+OCaml provides a unified syntax for pattern-matching on regular, effect, and
+exception patterns. The keyword \lstinline[style=ocaml]$effect$ begins an
+operation-clause. Essentially, we create a local function \lstinline$k'$, which
+wraps the actual continuation \lstinline$k$. An invocation of \lstinline$k'$
+passes its argument to a fresh copy of the actual continuation. The
+\lstinline$continue$ function is provided by the standard library; given a
+continuation and a value, it invokes the continuation with that particular
+value. By default we implement every handler as a multi-shot handler.
 
 \section{Optimisations}
 It is rather conservative to implement every handler as multi-shot. We
@@ -398,10 +391,10 @@ sacrificing the the abstraction.
 
 \paragraph{Linearisation}
 Handlers that use their continuations linearly should be promoted to
-linear handlers at compile time.  We plan to use Links' linear type
+linear handlers at compile time. We plan to use Links' linear type
 system to track the linearity of handlers.
 
-\paragraph{Handler resolution} 
+\paragraph{Handler resolution}
 Traversing a large handler stack is likely to be costly. If the
 handler stack, or part of it, is known statically, then we can
 instantiate abstract operations at compile time.
