@@ -268,7 +268,7 @@ inhabitants. Linear and exception handlers constitute \emph{affine
 %\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
 \begin{figure}
   \centering
-  \includegraphics[scale=0.9]{infrastructure-alt.eps}
+  \includegraphics[scale=0.8]{infrastructure-alt.eps}
   \caption{OCaml Backend}\label{fig:infra-diagram}
 \end{figure}
 We reuse most of the previous Links infrastructure. The Links frontend
@@ -385,6 +385,21 @@ value. By default we implement every handler as a multi-shot handler.
 % \kc{Can we have a small table or something that provides initial results?
 % Doesn't need to be extensive. I'd just do Queens, Nim, Chameneos? Otherwise, it
 % is unclear what the talk will be about.}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{| r | r | r | r |}
+    \hline
+                & State & 8-Queens & 20-Queens   \\
+    \hline
+    Interpreter &  76167&     242  &     411517  \\
+    \hline
+    Compiler    &  1619 &        1 &      1059  \\
+    \hline
+    OCaml       &  829  &        1 &       200  \\
+    \hline
+  \end{tabular}\caption{Microbenchmarks (runtimes are in miliseconds)}\label{tbl:benchmarks}
+\end{table}
 
 \section{Optimisations}
 % \kc{Rather than talking about this as something you would do in the future, I'd
