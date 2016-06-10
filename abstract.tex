@@ -99,7 +99,7 @@
 \titlebanner{Extended Abstract}    % These are ignored unless
 \preprintfooter{} % 'preprint' option specified.
 
-\title{Compiling Effect Handlers}
+\title{Compiling Links Effect Handlers to OCaml Backend}
 %\subtitle{-- Extended Abstract --}
 \authorinfo{Daniel Hillerström}
            {The University of Edinburgh}
@@ -162,17 +162,17 @@ for free.
 % they are only interpreted. The goal of the project is to add support for
 % natively compiled backend for Links through Multicore OCaml, but also take
 % advantage of multicore support and efficient JS compilation that will come for
-% free by targetting multicore OCaml}.
+% free by targeting multicore OCaml}.
 
 Prior work focuses mainly on the design and expressiveness of handlers
 rather than performance. Nevertheless, several papers do address
 performance. \citet{Kammar2013} take advantage of Haskell's aggressive
 fusion optimisations for an efficient Haskell library for handlers, as
 explained in detail by \citet{Wu2015}. \citet{Kiselyov2015} also
-optimise a different Haskell library for handlers, using prior work on
-optimising monadic reflection~\citep{PloegK14}.
-% Our work differs from these systems in that we compile effect handlers
-% directly, rather than via library.
+optimise a different Haskell library for handlers, taking advantage of
+prior work on optimising monadic reflection~\citep{PloegK14}.  Our
+work differs from these systems in that we compile effect handlers
+directly, rather than via library.
 
 
 %% but recent work has begun exploring efficient implementations of
@@ -268,7 +268,7 @@ inhabitants. Linear and exception handlers constitute \emph{affine
 %\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
 \begin{figure}
   \centering
-  \includegraphics[scale=0.79]{infrastructure-alt.eps}
+  \includegraphics[scale=0.65]{infrastructure-alt.eps}
   \caption{OCaml Backend}\label{fig:infra-diagram}
 \end{figure}
 We reuse most of the previous Links infrastructure. The Links frontend
@@ -292,7 +292,7 @@ code, in principle, enables us to take advantage of custom backends such as
 % \emph{Flambda}, which is an IR intended for high-level
 % optimisations. Flambda is reminiscent of the Links IR as it is in
 % ANF. However, it is deep into the native compilation pipeline,
-% therefore by targetting Lambda rather than Flambda, we achieve maximum
+% therefore by targeting Lambda rather than Flambda, we achieve maximum
 % flexibility as a translation into byte code, in principle, enables us
 % to take advantage of custom backends such as \texttt{js\_of\_ocaml} to
 % produce JavaScript.
@@ -310,7 +310,7 @@ Links programs are already typechecked.
 % code. Mention the reasons behind this choice, which seems unintuitive to a
 % casual reader. The reason being that fundamentally, Links' type-system is more
 % expressive than OCaml's (row-polymorohism) and hence Links programs cannot be
-% faithfully translated to surface OCaml syntax. By targetting Lambda, we subvert
+% faithfully translated to surface OCaml syntax. By targeting Lambda, we subvert
 % OCaml's typechecker, but since the Links programs are typechecked already, the
 % translation is safe.}
 
@@ -394,11 +394,11 @@ value. By default we implement every handler as a multi-shot handler.
     \cline{2-4}
     \multicolumn{1}{c|}{~} & \multicolumn{1}{c|}{State} & \multicolumn{1}{c|}{8-Queens} & \multicolumn{1}{c|}{20-Queens}   \\
     \hline
-    \multicolumn{1}{|l|}{Interpreter} &  76167&     242  &     411517  \\
+    \multicolumn{1}{|l|}{Links Interpreter} &  76167&     242  &     411517  \\
     \hline
-    \multicolumn{1}{|l|}{Compiler}    &  1619 &        1 &      1059  \\
+    \multicolumn{1}{|l|}{Links Compiler}    &  1619 &        1 &      1059  \\
     \hline
-    \multicolumn{1}{|l|}{OCaml (opt)}       &  829  &        1 &       200  \\
+    \multicolumn{1}{|l|}{OCaml (native)}    &  829  &        1 &       200  \\
     \hline
   \end{tabular}\caption{Micro-benchmarks (execution times are in milliseconds)}\label{tbl:benchmarks}
 \end{table}
@@ -408,14 +408,20 @@ value. By default we implement every handler as a multi-shot handler.
 % write it as current work. In particular, avoid "we plan". I am sure some of
 % this work will be done by September. This will form the meat of your actual
 % talk I'd think.}
-It is rather conservative to implement every handler as multi-shot. We
-would like to recover the efficiency of affine handlers, but without
-sacrificing the the abstraction. Table \ref{tbl:benchmarks} contains 
-the results of a few micro-benchmarks from \citet{Kammar2013}.
+% It is rather conservative to implement every handler as multi-shot. We
+% would like to recover the efficiency of affine handlers, but without
+% sacrificing the the abstraction. Table \ref{tbl:benchmarks} contains 
+% the results of a few micro-benchmarks from \citet{Kammar2013}.
 % \kc{Even without the optimizations, I expect Links compiled to OCaml to be
 % faster than the interpreted version. Compare the performance on Queens? By
 % varying the board size:
 % https://github.com/kayceesrk/ocaml-eff-example/blob/master/queens.ml}
+
+Table 1 contains the results of a few micro-benchmarks from
+\citet{Kammar2013}. Links Compiler corresponds to this work. While the
+results are promising, it is rather conservative to implement every
+handler as multi-shot. We would like to recover the efficiency of
+affine handlers, but without sacrificing the the abstraction.
 
 \paragraph{Linearisation}
 Handlers that use their continuations linearly should be promoted to
