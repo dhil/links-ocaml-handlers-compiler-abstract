@@ -182,7 +182,7 @@ directly, rather than via library.
 %% \citet{Kiselyov2015} \emph{freer monad} implementation in Haskell, and
 %% \citet{Wu2015} fusion optimisation for (deep) handlers.
 
-\section{Affine and multi-shot effect handlers}
+\section{Affine and Multi-shot Effect Handlers}
 This section provides a short primer to effect handlers in Links. An algebraic
 effect is given by a signature of \emph{abstract operations}. For example
 \emph{nondeterminism} is an algebraic effect that is given by a
@@ -264,12 +264,12 @@ inhabitants. Linear and exception handlers constitute \emph{affine
 % option of explicitly cloning them. Do also mention that OCaml does not have
 % effect typing.}
 
-\section{Compiler infrastructure}
+\section{Compiler Infrastructure}
 %\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
 \begin{figure}
   \centering
-  \includegraphics[scale=0.5]{infrastructure-alt.eps}
-  \caption{Lambda is the first IR in the OCaml backend. It can be compiled to either byte or native code.}\label{fig:infra-diagram}
+  \includegraphics[scale=0.9]{infrastructure-alt.eps}
+  \caption{OCaml Backend}\label{fig:infra-diagram}
 \end{figure}
 We reuse most of the previous Links infrastructure. The Links frontend
 is type-checked and translated into a small, typed intermediate
@@ -382,15 +382,15 @@ passes its argument to a fresh copy of the actual continuation. The
 continuation and a value, it invokes the continuation with that particular
 value. By default we implement every handler as a multi-shot handler.
 
-\kc{Can we have a small table or something that provides initial results?
-Doesn't need to be extensive. I'd just do Queens, Nim, Chameneos? Otherwise, it
-is unclear what the talk will be about.}.
+% \kc{Can we have a small table or something that provides initial results?
+% Doesn't need to be extensive. I'd just do Queens, Nim, Chameneos? Otherwise, it
+% is unclear what the talk will be about.}.
 
 \section{Optimisations}
-\kc{Rather than talking about this as something you would do in the future, I'd
-write it as current work. In particular, avoid "we plan". I am sure some of
-this work will be done by September. This will form the meat of your actual
-talk I'd think.}
+% \kc{Rather than talking about this as something you would do in the future, I'd
+% write it as current work. In particular, avoid "we plan". I am sure some of
+% this work will be done by September. This will form the meat of your actual
+% talk I'd think.}
 It is rather conservative to implement every handler as multi-shot. We
 would like to recover the efficiency of affine handlers, but without
 sacrificing the the abstraction.
@@ -401,8 +401,9 @@ sacrificing the the abstraction.
 
 \paragraph{Linearisation}
 Handlers that use their continuations linearly should be promoted to
-linear handlers at compile time. We will use Links' linear type system to
-track the linearity of handlers.
+linear handlers at compile time. We are currently working on applying
+the existing linear type system of Links to track the linearity of
+handlers.
 
 \paragraph{Handler resolution}
 Traversing a large handler stack is likely to be costly. If the
