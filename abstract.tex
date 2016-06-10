@@ -124,7 +124,7 @@
 \end{abstract}
 
 \section{Motivation}
-\kc{if you find yourself short of space, I'd axe some of this section.}
+%\kc{if you find yourself short of space, I'd axe some of this section.}
 
 % \sam{this paragraph needs to be a bit more focused}
 % Algebraic effects and effect handlers \cite{Plotkin2013} afford a
@@ -138,8 +138,8 @@ Algebraic effects and handlers \cite{Plotkin2013} afford a compelling
 and modular alternative to monad transformers for controlling
 computational effects. In previous work, we extended the functional
 web programming language Links with algebraic effects and handlers
-\cite{Hillerstrom2015,Hillerstrom2016}. Links uses row polymorphism to
-provide extensible effect typing.
+\cite{Hillerstrom2015,Hillerstrom2016}.
+% Links uses row polymorphism to provide extensible effect typing.
 
 Links is a single language for multi-tier web-programming
 \cite{Cooper2006}. It has three backends:
@@ -169,10 +169,10 @@ rather than performance. Nevertheless, several papers do address
 performance. \citet{Kammar2013} take advantage of Haskell's aggressive
 fusion optimisations for an efficient Haskell library for handlers, as
 explained in detail by \citet{Wu2015}. \citet{Kiselyov2015} also
-optimise a different Haskell library for handlers, taking advantage of
-prior work on optimising monadic reflection~\citep{PloegK14}. Our work
-differs from these systems in that we compile effect handlers
-directly, rather than via library.
+optimise a different Haskell library for handlers, using prior work on
+optimising monadic reflection~\citep{PloegK14}.
+% Our work differs from these systems in that we compile effect handlers
+% directly, rather than via library.
 
 
 %% but recent work has begun exploring efficient implementations of
@@ -243,11 +243,11 @@ interpreting the operation as \lstinline$true$ and \lstinline$false$,
 respectively. We say that \lstinline$allResults$ is a \emph{multi-shot
   handler}.
 
-Finally, we may have handlers that do not invoke continuations. These
+Finally, we have handlers that do not invoke continuations. These
 handlers are familiarly known as \emph{exception handlers}. As an
-example consider the following handler, which returns
-\lstinline$Just$ the result of the computation or returns
-\lstinline$Nothing$ if the operation \lstinline$Fail$ is performed:
+example consider the following handler, which returns \lstinline$Just$
+the result of the computation or returns \lstinline$Nothing$ if the
+operation \lstinline$Fail$ is performed:
 %
 \lstinputlisting{snippets/maybeResult.links}
 %
@@ -268,7 +268,7 @@ inhabitants. Linear and exception handlers constitute \emph{affine
 %\dhil{OCaml run-time maintains a stack of handlers; no optimisations.}
 \begin{figure}
   \centering
-  \includegraphics[scale=0.8]{infrastructure-alt.eps}
+  \includegraphics[scale=0.7]{infrastructure-alt.eps}
   \caption{OCaml Backend}\label{fig:infra-diagram}
 \end{figure}
 We reuse most of the previous Links infrastructure. The Links frontend
@@ -341,23 +341,25 @@ Links programs are already typechecked.
 % \end{figure}
 
 \section{Runtime representation}
-By using the OCaml backend we naturally inherit the OCaml run-time. OCaml
-implements effect handlers as heap-managed stack data structures, and as a
-consequence composition of handlers gives rise to $n$-element stacks at
-run-time. For example, the composition
-\lstinline[mathescape]!randomResult(maybeResult($\cdot$))! gives rise to a
-two-element stack. Thus, an invocation of an abstract operation amounts to a
-dynamic lookup for a suitable handler in a stack.
+By using the OCaml backend we naturally inherit the OCaml
+run-time. OCaml implements effect handlers as heap-managed stack data
+structures, and as a consequence composition of handlers gives rise to
+$n$-element stacks at run-time. For example, the composition
+\lstinline[mathescape]!randomResult(maybeResult($\cdot$))! is
+represented as a two-element stack. Thus, an invocation of an abstract
+operation amounts to performing a dynamic lookup for a suitable
+handler in a stack.
 
-Since the primary use of handlers in OCaml is the express concurrency, OCaml
-handlers are affine; continuations can only be resumed at most once, and
-multiple invocations of a continuation causes a run-time error. Multi-shot
-handlers can be simulated by manually cloning continuations using
-\lstinline$Obj.clone_continuation$. The cost of cloning is linear in the size
-of the handler stack. However, cloning is a fragile abstraction; if the handler
-stack contains at least one multi-shot handler, then every affine handler in
-the stack must be demoted to a multi-shot handler to be safe. The reason for
-this is that a multi-shot handler may consume a linear continuation more than
+Since the primary use of handlers in OCaml is the express concurrency,
+OCaml handlers are affine; continuations can only be resumed at most
+once, and multiple invocations of a continuation causes a run-time
+error. Multi-shot handlers can be simulated by manually cloning
+continuations using \lstinline$Obj.clone_continuation$. The cost of
+cloning is linear in the size of the handler stack. However, cloning
+is a fragile abstraction; if the handler stack contains at least one
+multi-shot handler, then every affine handler in the stack must be
+demoted to a multi-shot handler to be safe, because a multi-shot
+handler may consume a linear continuation more than
 once. Consequently, multi-shot handlers in OCaml break modularity.
 
 In the Links compiler we use the cloning capability under the hood to implement
@@ -389,16 +391,16 @@ value. By default we implement every handler as a multi-shot handler.
 \begin{table}
   \centering
   \begin{tabular}{| r | r | r | r |}
+    \cline{2-4}
+    \multicolumn{1}{c|}{~} & \multicolumn{1}{c|}{State} & \multicolumn{1}{c|}{8-Queens} & \multicolumn{1}{c|}{20-Queens}   \\
     \hline
-                & State & 8-Queens & 20-Queens   \\
+    \multicolumn{1}{|l|}{Interpreter} &  76167&     242  &     411517  \\
     \hline
-    Interpreter &  76167&     242  &     411517  \\
+    \multicolumn{1}{|l|}{Compiler}    &  1619 &        1 &      1059  \\
     \hline
-    Compiler    &  1619 &        1 &      1059  \\
+    \multicolumn{1}{|l|}{OCaml (opt)}       &  829  &        1 &       200  \\
     \hline
-    OCaml       &  829  &        1 &       200  \\
-    \hline
-  \end{tabular}\caption{Microbenchmarks (runtimes are in miliseconds)}\label{tbl:benchmarks}
+  \end{tabular}\caption{Micro-benchmarks (execution times are in milliseconds)}\label{tbl:benchmarks}
 \end{table}
 
 \section{Optimisations}
@@ -408,7 +410,8 @@ value. By default we implement every handler as a multi-shot handler.
 % talk I'd think.}
 It is rather conservative to implement every handler as multi-shot. We
 would like to recover the efficiency of affine handlers, but without
-sacrificing the the abstraction.
+sacrificing the the abstraction. Table \ref{tbl:benchmarks} contains 
+the results of a few micro-benchmarks from \citet{Kammar2013}.
 % \kc{Even without the optimizations, I expect Links compiled to OCaml to be
 % faster than the interpreted version. Compare the performance on Queens? By
 % varying the board size:
