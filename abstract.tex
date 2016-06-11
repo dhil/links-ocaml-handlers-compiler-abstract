@@ -183,22 +183,24 @@ directly, rather than via library.
 %% \citet{Wu2015} fusion optimisation for (deep) handlers.
 
 \section{Affine and Multi-shot Effect Handlers}
-This section provides a short primer to effect handlers in Links. An algebraic
-effect is given by a signature of \emph{abstract operations}. For example
-\emph{nondeterminism} is an algebraic effect that is given by a
-nondeterministic choice operation called \lstinline$Choose$. In Links, we may
-use this operation to implement a coin toss:
+This section provides a short primer to effect handlers in Links. An
+algebraic effect is given by a signature of \emph{abstract
+  operations}. For example \emph{nondeterminism} is an algebraic
+effect that is given by a nondeterministic choice operation called
+\lstinline$Choose$. In Links, we may use this operation to implement a
+coin toss:
 %
 \lstinputlisting{snippets/toss.links}
 %
-This declares an \emph{abstract computation} \lstinline$toss$, which invokes an
-operation \lstinline$Choose$ using the \lstinline$do$ primitive.  The
-\lstinline$sig$ keyword begins a signature, which reads: \lstinline$toss$ is a
-computation with effect signature \lstinline${Choose:Bool |e}$ and return value
-\lstinline$Toss$, whose constructors are \lstinline$Heads$ and
-\lstinline$Tails$.  Links employs row typing to support extensible effect
-signatures, thus \lstinline$e$ is an effect variable, which can be instantiated
-with additional operations.
+This declares an \emph{abstract computation} \lstinline$toss$, which
+invokes an operation \lstinline$Choose$ using the \lstinline$do$
+primitive.  The \lstinline$sig$ keyword begins a signature, which
+reads: \lstinline$toss$ is a computation with effect signature
+\lstinline${Choose:Bool |e}$ and return value \lstinline$Toss$, whose
+constructors are \lstinline$Heads$ and \lstinline$Tails$.  Links
+employs row typing to support extensible effect signatures, thus
+\lstinline$e$ is an effect variable, which can be instantiated with
+additional operations.
 
 Introduction of another operation causes the effect signature to grow
 accordingly. For example, if we introduce an exception operation
@@ -207,8 +209,8 @@ accordingly. For example, if we introduce an exception operation
 \lstinputlisting{snippets/drunkToss.links}
 %
 Here \lstinline$Zero$ is the empty type, therefore the empty
-\lstinline$switch$ pattern matching construct is required in order to
-make the branches type check.
+\lstinline$switch$ pattern matching construct is required to make the
+branches type check.
 
 An effect handler instantiates a subset of the operations of an
 abstract computation. For example, the following handler interprets
@@ -225,7 +227,7 @@ clauses:
 \item the \lstinline$Return$-clause specifies how to handle the return
   value of the computation.
 \item the parameter \lstinline$k$ in the \lstinline$Choose$-clause is
-  the (delimited) continuation of the operation \lstinline$Choose$ in the
+  the continuation of the operation \lstinline$Choose$ in the
   computation.
 \end{enumerate*}
 We say that \lstinline$randomResult$ is a \emph{linear handler}, because
