@@ -110,14 +110,14 @@
            {~}%{\reachme{sam.lindley}}
 
 \authorinfo{KC Sivaramakrishnan}
-           {The University of Cambridge}
+           {University of Cambridge}
            {~}
 
 \maketitle
 
 \begin{abstract}
   Algebraic effects and handlers provide a modular abstraction for
-  modeling and controlling computational effects. We present a
+  modelling and controlling computational effects. We present a
   compiler for the experimental language Links with effect
   handlers. Our compiler interfaces with the Multicore OCaml backend
   to take advantage of OCaml's implementation of efficient handlers.
@@ -141,7 +141,7 @@ web programming language Links with algebraic effects and handlers
 \cite{Hillerstrom2015,Hillerstrom2016}.
 % Links uses row polymorphism to provide extensible effect typing.
 
-Links is a single language for multi-tier web-programming
+Links is a strict ML-like functional language for the web
 \cite{Cooper2006}. It has three backends:
 \begin{enumerate*}[label={\roman*)}]
  \item a JavaScript compiler for the client,
@@ -151,11 +151,11 @@ Links is a single language for multi-tier web-programming
 Currently effect handlers are only supported on the server; in future
 we intend to extend the JavaScript compiler to support them too.
 
-In order to improve performance, and to study efficient compilation of effect
-handlers in general, we have implemented a Links compiler that targets the
-Multicore OCaml backend \cite{Dolan2015}. By taking advantage of the OCaml
-backend we obtain both native code compilation support and the OCaml toolchain
-for free.
+In order to improve performance, and to study efficient compilation of
+effect handlers in general, we have implemented a Links compiler that
+targets the Multicore OCaml backend \cite{Dolan2015}. By taking
+advantage of the OCaml backend we obtain both native code compilation
+and access to the OCaml toolchain for free.
 
 % \kc{The paper as it stands now does not mention why, but only deals with the
 % question of how. We should mention the current Links backends, and say they
@@ -208,9 +208,8 @@ accordingly. For example, if we introduce an exception operation
 %
 \lstinputlisting{snippets/drunkToss.links}
 %
-Here \lstinline$Zero$ is the empty type, therefore the empty
-\lstinline$switch$ pattern matching construct is required to make the
-branches type check.
+Here \lstinline$Zero$ is the empty type, and thus the
+\lstinline$switch$ pattern matching construct has no clauses.
 
 An effect handler instantiates a subset of the operations of an
 abstract computation. For example, the following handler interprets
@@ -219,44 +218,43 @@ abstract computation. For example, the following handler interprets
 \lstinputlisting{snippets/randomResult.links}
 %
 The signature conveys that the handler interprets the operation
-\lstinline$Choose$ and leaves potentially other operations
-abstract. The notation \lstinline$Choose{_}$ denotes that the
-operation is polymorphic in its presence.  The handler comprises two
-clauses:
+\lstinline$Choose$ and leaves any other operations uninterpreted. The
+notation \lstinline$Choose{_}$ denotes that the operation is
+polymorphic in its presence.  The handler comprises two clauses:
 \begin{enumerate*}[label={\roman*)}]
 \item the \lstinline$Return$-clause specifies how to handle the return
   value of the computation.
-\item the parameter \lstinline$k$ in the \lstinline$Choose$-clause is
-  the continuation of the operation \lstinline$Choose$ in the
+\item the \lstinline$Choose$-clause specifies how to handle a
+  \lstinline$Choose$ operation. The parameter \lstinline$k$ is the
+  (delimited) continuation of the operation \lstinline$Choose$ in the
   computation.
 \end{enumerate*}
 We say that \lstinline$randomResult$ is a \emph{linear handler}, because
 it invokes every continuation exactly once.
 
-Alternatively, we may give an interpretation of \lstinline$Choose$
-that enumerates every possible outcome by invoking the continuation
-twice:
+Alternatively, we may define a handler for \lstinline$Choose$ that
+invokes its continuation twice to enumerate every possible outcome:
 %
 \lstinputlisting{snippets/allResults.links}
 %
-Observe that the return value gets lifted into a singleton list. The
+Observe that the return value is lifted into a singleton list. The
 \lstinline$Choose$-clause concatenates the outcomes obtained by
 interpreting the operation as \lstinline$true$ and \lstinline$false$,
 respectively. We say that \lstinline$allResults$ is a \emph{multi-shot
   handler}.
 
-Finally, we have handlers that do not invoke continuations. These
-handlers are familiarly known as \emph{exception handlers}. As an
-example consider the following handler, which returns \lstinline$Just$
-the result of the computation or returns \lstinline$Nothing$ if the
-operation \lstinline$Fail$ is performed:
+Finally, we have handlers that do not invoke continuations. These are
+familiar \emph{exception handlers}. As an example consider the
+following handler, which returns \lstinline$Just$ the result of the
+computation or returns \lstinline$Nothing$ if the operation
+\lstinline$Fail$ is performed:
 %
 \lstinputlisting{snippets/maybeResult.links}
 %
-The type system prevents invocation of the continuation in the an
+The type system prevents invocation of the continuation in the
 \lstinline$Fail$-clause, because the type \lstinline$Zero$ has zero
-inhabitants. Linear and exception handlers constitute \emph{affine
-  handlers}.
+inhabitants. Linear and exception handlers together constitute
+\emph{affine handlers}.
 
 % \kc{This section is too long. Can we make this section into a background one,
 % where we introduce Links (mention handlers, row polymorphism, effect system)
@@ -342,7 +340,7 @@ Links programs are already typechecked.
 % \caption{Runtime representation of the computation \lstinline$maybeResult(randomResult(drunkToss))$.}\label{fig:rtstack}
 % \end{figure}
 
-\section{Runtime representation}
+\section{Runtime Representation}
 By using the OCaml backend we naturally inherit the OCaml
 run-time. OCaml implements effect handlers as heap-managed stack data
 structures, and as a consequence composition of handlers gives rise to
@@ -352,7 +350,7 @@ represented as a two-element stack. Thus, an invocation of an abstract
 operation amounts to performing a dynamic lookup for a suitable
 handler in a stack.
 
-Since the primary use of handlers in OCaml is the express concurrency,
+Since the primary use of handlers in OCaml is to express concurrency,
 OCaml handlers are affine; continuations can only be resumed at most
 once, and multiple invocations of a continuation causes a run-time
 error. Multi-shot handlers can be simulated by manually cloning
@@ -423,7 +421,7 @@ Table 1 contains the results of a few micro-benchmarks from
 \citet{Kammar2013}. Links Compiler corresponds to this work. While the
 results are promising, it is rather conservative to implement every
 handler as multi-shot. We would like to recover the efficiency of
-affine handlers, but without sacrificing the the abstraction.
+affine handlers, but without sacrificing abstraction.
 
 \paragraph{Linearisation}
 Handlers that use their continuations linearly should be promoted to
@@ -431,7 +429,7 @@ linear handlers at compile time. We are currently working on applying
 the existing linear type system of Links to track the linearity of
 handlers.
 
-\paragraph{Handler resolution}
+\paragraph{Handler Resolution}
 Traversing a large handler stack is likely to be costly. If the
 handler stack, or part of it, is known statically, then we can
 instantiate abstract operations at compile time.
@@ -464,7 +462,7 @@ instantiate abstract operations at compile time.
 \section{Acknowledgements}
 The first and second authors were supported by EPSRC grants CDT in
 Pervasive Parallelism (EP/L01503X/1) and EP/K034413/1,
-respectively.  This work is collaborative work with OCaml Labs.
+respectively. This work is in collaboration with OCaml Labs.
 
 \bibliographystyle{abbrvnat} \softraggedright
 \bibliography{references}
