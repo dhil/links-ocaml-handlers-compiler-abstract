@@ -12,13 +12,13 @@
 \usetheme{Madrid}
 
 %% Colours block environment headings
-\useinnertheme{rectangles}
-\mode<beamer>{\setbeamertemplate{blocks}[rounded][shadow=false]} 
-\setbeamercolor{block title}{bg=blue!10,fg=black}
-\makeatletter
-\pgfdeclareverticalshading[lower.bg,upper.bg]{bmb@transition}{200cm}{%
-  color(0pt)=(upper.bg); color(2pt)=(upper.bg); color(4pt)=(upper.bg)}
-\makeatother
+% \useinnertheme{rectangles}
+% \mode<beamer>{\setbeamertemplate{blocks}[rounded][shadow=false]} 
+% \setbeamercolor{block title}{bg=blue!10,fg=black}
+% \makeatletter
+% \pgfdeclareverticalshading[lower.bg,upper.bg]{bmb@transition}{200cm}{%
+%   color(0pt)=(upper.bg); color(2pt)=(upper.bg); color(4pt)=(upper.bg)}
+% \makeatother
 
 %% Enable slide numbering
 \makeatletter
@@ -313,9 +313,9 @@ handler randomResult {
 %% All results animation
 \begin{onlyenv}<4-5>
 \begin{lstlisting}
-sig allResults : (() {Choose:Bool|e}->  a) -> 
+sig allChoices : (() {Choose:Bool|e}->  a) -> 
                   () {Choose{_}  |e}-> [a]
-handler allResults {
+handler allChoices {
   case Return(x) -> [x]
   case Choose(resume) -> resume(true) ++ resume(false)
 }
@@ -335,7 +335,7 @@ Tails : Toss
 %
 \begin{onlyenv}<4-4>
 \begin{lstlisting}[style=terminal]
-links> allResults(toss)();
+links> allChoices(toss)();
 [Heads, Tails] : [Toss]
 \end{lstlisting}
 \end{onlyenv}
@@ -344,7 +344,7 @@ links> allResults(toss)();
 \begin{onlyenv}<5-5>
 Interpretation of \lstinline$drunkToss$ with either handler:
 \begin{lstlisting}[style=terminal]
-links> allResults(drunkToss)();
+links> allChoices(drunkToss)();
 *** Error: Unhandled operation: Fail
 \end{lstlisting}
 \end{onlyenv}
@@ -370,14 +370,14 @@ a value of \lstinline$Zero$. Thus, this handler amounts to an \emph{exception ha
 Handlers compose to fully interpret an abstract computation, e.g.
 \begin{onlyenv}<1-1>
 \begin{lstlisting}[style=terminal]
-links> maybeResult(allResults(drunkToss))();
-Just([Heads, Tails]) : Maybe([Toss])
+links> maybeResult(allChoices(drunkToss))();
+Nothing : Maybe([Toss])
 \end{lstlisting}
 \end{onlyenv}
 %
 \begin{onlyenv}<2-2>
 \begin{lstlisting}[style=terminal]
-links> allResults(maybeResult(drunkToss))();
+links> allChoices(maybeResult(drunkToss))();
 [Just(Heads), Just(Tails), Nothing] : [Maybe(Toss)]
 \end{lstlisting}
 \end{onlyenv}
@@ -426,7 +426,7 @@ Multi-shot handlers
 \begin{columns}
 \begin{column}{0.6\textwidth}
 \begin{lstlisting}
-handler allResults {
+handler allChoices {
   case Return(x)      -> [x]
   case Choose(resume) -> 
      resume(true) ++ resume(false)
@@ -451,11 +451,11 @@ Want to make this abstraction efficient.
   \frametitle{Compiling Handlers}
 Compilation options
 \begin{itemize}
-  \item Free monad (Bauer and Pretnar, 2015)
   \item Continuation monad (Kammar et al., 2013)
-  \item Full CPS translation
-  \item Selective CPS translation (Leijen, 2016)
+  \item Free monad (Bauer and Pretnar, 2015)
   \item \alt<2>{\tikz[baseline,remember picture]{\node[fill=green!20,anchor=base,rounded corners=2pt] (t1){Direct-style like Multicore OCaml (Dolan et al., 2015).};}}{Direct-style like Multicore OCaml (Dolan et al., 2015).}
+%  \item Full CPS translation
+  \item Selective CPS translation (Leijen, 2016)
 \end{itemize}
 \end{frame}
 
@@ -523,79 +523,194 @@ Multicore OCaml
 \begin{itemize}
 \item provides effect handlers as abstraction for concurrency,
 \item provides an efficient, native implementation of affine effect handlers,
-\item and implements handlers as heap-managed stack data structures.
+\item \dots invoking a continuation multiple times produces a runtime error!
+%\item and implements handlers as heap-managed stack data structures.
 \end{itemize}
-Runtime layout of \lstinline$randomResult(maybeResult(drunkToss))$:
-\begin{figure}
-\tikzset{stack/.style={
-        draw=black, 
-        rectangle, 
-        minimum width=18pt,
-        minimum height=55pt,
-        fill=blue!75}
-}
+% Runtime layout of \lstinline$randomResult(maybeResult(drunkToss))$:
+% \begin{figure}
+% \tikzset{stack/.style={
+%         draw=black, 
+%         rectangle, 
+%         minimum width=18pt,
+%         minimum height=55pt,
+%         fill=blue!75}
+% }
 
-\tikzset{handler/.style={
-        draw=black, 
-        rectangle, 
-        minimum width=18pt,
-        minimum height=15pt,
-        fill=green!75}
-}
-\begin{tikzpicture}[node distance=0pt,every node/.style={draw, rectangle,  minimum width=10pt, outer sep=0pt}]
+% \tikzset{handler/.style={
+%         draw=black, 
+%         rectangle, 
+%         minimum width=18pt,
+%         minimum height=15pt,
+%         fill=green!75}
+% }
+% \begin{tikzpicture}[node distance=0pt,every node/.style={draw, rectangle,  minimum width=10pt, outer sep=0pt}]
 
-\node [stack] (s1) { };
-\node [handler,above=of s1] (h1) { $H_1$ };
-\node [draw=none,below=of s1,yshift=-20pt] (oplabel) { Handles \lstinline$Choose$ };
+% \node [stack] (s1) { };
+% \node [handler,above=of s1] (h1) { $H_1$ };
+% \node [draw=none,below=of s1,yshift=-20pt] (oplabel) { Handles \lstinline$Choose$ };
 
-\node [draw=none,left=of h1,xshift=-20pt,yshift=-10pt] (h1label) {handler};
+% \node [draw=none,left=of h1,xshift=-20pt,yshift=-10pt] (h1label) {handler};
 
-\node [stack,right=of s1,xshift=70pt] (s2) { };
-\node [handler,above=of s2] (h2) { $H_2$ };
+% \node [stack,right=of s1,xshift=70pt] (s2) { };
+% \node [handler,above=of s2] (h2) { $H_2$ };
 
-\node [stack,right=of s2,xshift=70pt] (s3) { };
+% \node [stack,right=of s2,xshift=70pt] (s3) { };
 
-\node [draw=none,below=of s3,yshift=-20pt] (drunkToss) { \lstinline$drunkToss$ computation };
+% \node [draw=none,below=of s3,yshift=-20pt] (drunkToss) { \lstinline$drunkToss$ computation };
 
-\node [draw=none,above=of s3,yshift=25pt] (ghost1) { };
-\node [draw=none,right=of ghost1,xshift=15pt] (ghost2) { call chain };
-\node [draw=none,above=of ghost1,yshift=5pt] (ghost3) { };
-\node [draw=none,right=of ghost3,xshift=15pt] (ghost4) { reference };
-\draw[dotted,thick,->] (ghost1) -- (ghost2) { };
-\draw[thick,->] (ghost3) -- (ghost4) { };
+% \node [draw=none,above=of s3,yshift=25pt] (ghost1) { };
+% \node [draw=none,right=of ghost1,xshift=15pt] (ghost2) { call chain };
+% \node [draw=none,above=of ghost1,yshift=5pt] (ghost3) { };
+% \node [draw=none,right=of ghost3,xshift=15pt] (ghost4) { reference };
+% \draw[dotted,thick,->] (ghost1) -- (ghost2) { };
+% \draw[thick,->] (ghost3) -- (ghost4) { };
 
-\uncover<2-2>{\node [draw=none,left=of s3,yshift=30pt,xshift=-5pt] {\lstinline$do Choose$};}
-\uncover<5-5>{\node [draw=none,left=of s3,yshift=30pt,xshift=5pt] {\lstinline$resume(true)$};}
-\uncover<2-5>{\draw[thick,->] (h2) -- (s3) { };}
+% \uncover<2-2>{\node [draw=none,left=of s3,yshift=30pt,xshift=-5pt] {\lstinline$do Choose$};}
+% \uncover<5-5>{\node [draw=none,left=of s3,yshift=30pt,xshift=5pt] {\lstinline$resume(true)$};}
+% \uncover<2-5>{\draw[thick,->] (h2) -- (s3) { };}
 
-\uncover<3-3>{\node [draw=none,left=of h2,xshift=-2pt,yshift=6pt] {forward \lstinline$Choose$};}
-\uncover<4-4>{\node [draw=none,left=of h2,xshift=-2pt,yshift=6pt] {\lstinline$resume(true)$};}
-\uncover<3-4>{\draw[thick,->] (h1) -- (h2) { };}
+% \uncover<3-3>{\node [draw=none,left=of h2,xshift=-2pt,yshift=6pt] {forward \lstinline$Choose$};}
+% \uncover<4-4>{\node [draw=none,left=of h2,xshift=-2pt,yshift=6pt] {\lstinline$resume(true)$};}
+% \uncover<3-4>{\draw[thick,->] (h1) -- (h2) { };}
 
-% Arrows
-\draw[->,thick] ([yshift=-10pt]s2.west) -- ([yshift=-10pt]s1.east) { };
-\draw[dotted,thick,->] (h1.east) [in=180,out=0] to ([yshift=2pt]s2.south west) { };
-\draw[->] (h1label.east) -- (h1.west) { };
+% % Arrows
+% \draw[->,thick] ([yshift=-10pt]s2.west) -- ([yshift=-10pt]s1.east) { };
+% \draw[dotted,thick,->] (h1.east) [in=180,out=0] to ([yshift=2pt]s2.south west) { };
+% \draw[->] (h1label.east) -- (h1.west) { };
 
-\draw[->,thick] ([yshift=-10pt]s3.west) -- ([yshift=-10pt]s2.east) { };
-\draw[dotted,thick,->] (h2.east) [in=180,out=0] to ([yshift=2pt]s3.south west) { };
+% \draw[->,thick] ([yshift=-10pt]s3.west) -- ([yshift=-10pt]s2.east) { };
+% \draw[dotted,thick,->] (h2.east) [in=180,out=0] to ([yshift=2pt]s3.south west) { };
 
-\draw[->,draw=red!90,thick] (oplabel) [in=-95,out=80] to (h1) { };
-\draw[->,draw=red!90,thick] (drunkToss) [in=-95,out=80] to (s3.south) { };
-\end{tikzpicture}
-\end{figure}
+% \draw[->,draw=red!90,thick] (oplabel) [in=-95,out=80] to (h1) { };
+% \draw[->,draw=red!90,thick] (drunkToss) [in=-95,out=80] to (s3.south) { };
+% \end{tikzpicture}
+% \end{figure}
 \end{frame}
 
 \begin{frame}
-  Todo
-\begin{itemize}
-  \item Motivation for handlers
-  \item OCaml provides efficient implementation of handlers (show stack diagram)
-  \item From nice ideal world, to practical and efficient world (type-directed).
-  \item Report on optimisations
-  \item Sometime we do not want linear continuation to be promoted.
-\end{itemize}
+  \frametitle{Translating Links Handlers to OCaml Handlers (1)}
+  \begin{table}
+    \bgroup
+    \def\arraystretch{2.5}
+   \begin{tabular}{l p{3cm} l}
+     \textbf{Links} & \hfill & \textbf{OCaml} \\
+     \hline
+     Exception handlers & \tikz[remember picture] \node[coordinate] (n1) {}; \hfill \tikz[remember picture] \node[coordinate] (n2) {}; & Exception handlers \\
+     Linear handlers    & \tikz[remember picture] \node[coordinate] (m1) {}; \hfill \tikz[remember picture] \node[coordinate] (m2) {}; & Linear handlers \\
+     Multi-shot handlers & \tikz[remember picture] \node[coordinate] (p1) {}; \hfill \tikz[remember picture] \node[coordinate] (p2) {}; & \alt<2->{On demand multi-shot handlers}{???}
+   \end{tabular}
+   \egroup
+  \end{table}
+%
+\begin{tikzpicture}[remember picture,overlay]   %% use here too
+   \path[draw=black,thick,->] ([yshift=3]n1.east) to [out=0, in=0,distance=0in] ([yshift=3]n2.east);
+   \path[draw=black,thick,->] ([yshift=3]m1.east) to [out=0, in=0,distance=0in] ([yshift=3]m2.east);
+   \path[draw=black,thick,->] ([yshift=3]p1.east) to [out=0, in=0,distance=0in] ([yshift=3]p2.east);
+\end{tikzpicture}
 \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{On Demand Multi-shot Handlers are Fragile} 
+%
+  Here is the \emph{multi-shot} handler \lstinline$allChoices$ with
+  explicit continuation copying:
+\begin{lstlisting}
+handler allChoices {
+  case Return(x)      -> [x]
+  case Choose(resume) -> 
+    fun multiResume(x) { var r = clone(resume); r(x) }     
+    multiResume(true) ++ multiResume(false)
+}    
+\end{lstlisting}
+%
+\begin{uncoverenv}<2->
+Consider another \emph{linear} handler for \lstinline$Choose$:
+\begin{lstlisting}
+handler flip {
+  case Return(x)      -> x
+  case Choose(resume) -> (*\alt<4->{\tikz[baseline,remember picture]{\node[fill=green!20,anchor=base,rounded corners=2pt] (t1){resume};}}{resume}*)(not(do Choose))
+}    
+\end{lstlisting}
+OCaml implements \lstinline$resume$ as a linear continuation. Consider
+what happens when we evaluate the composition
+\lstinline[mathescape]!allChoices(flip($\cdot$))!:
+\end{uncoverenv}
+%
+\begin{uncoverenv}<3->
+\begin{lstlisting}
+links> allChoices(flip(toss))();
+Exception: Invalid_argument "continuation(*\tikz[remember picture] \node[coordinate] (n1) {};*) already taken".}
+\end{lstlisting}
+\end{uncoverenv}
+%
+
+\begin{tikzpicture}[remember picture,overlay]   %% use here too
+   \path[draw=red,thick,->]<4-> ([yshift=2mm,xshift=-30]n1.north) to [out=80, in=270,distance=0.5in] (t1.south);
+\end{tikzpicture}
+%
+\end{frame}
+
+\begin{frame}
+  \frametitle{Translating Links Handlers to OCaml Handlers (2)}
+  In the light of the previous slide\dots
+  \begin{table}
+    \bgroup
+    \def\arraystretch{2.5}
+   \begin{tabular}{l p{3cm} l}
+     \textbf{Links} & \hfill & \textbf{OCaml} \\
+     \hline
+     Exception handlers & \tikz[remember picture] \node[coordinate] (n1) {}; \hfill \tikz[remember picture] \node[coordinate] (n2) {}; & Exception handlers \\
+     Linear handlers    & \tikz[remember picture] \node[coordinate] (m1) {}; \hfill \tikz[remember picture] \node[coordinate] (m2) {}; & Linear handlers \\
+     Multi-shot handlers & \tikz[remember picture] \node[coordinate] (p1) {}; \hfill \tikz[remember picture] \node[coordinate] (p2) {}; & On demand multi-shot handlers
+   \end{tabular}
+   \egroup
+  \end{table}
+%
+\uncover<2->{Clearly this is not good for performance\dots}
+%
+\begin{tikzpicture}[remember picture,overlay]   %% use here too
+   \path[draw=black,thick,->] ([yshift=3]n1.east) to [out=0, in=0,distance=0in] ([yshift=3]n2.east);
+   \alt<2->{\path[draw=black,thick,->] ([yshift=3]m1.east) to [out=0, in=0,distance=0in] ([yshift=3]p2.east);}{\path[draw=black,thick,->] ([yshift=3]m1.east) to [out=0, in=0,distance=0in] ([yshift=3]m2.east);}
+   \path[draw=black,thick,->] ([yshift=3]p1.east) to [out=0, in=0,distance=0in] ([yshift=3]p2.east);
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is the Penalty?}
+  \begin{figure}
+    \centering
+    \includegraphics[scale=0.45]{figures/sieve_compiler-interpreter.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How Can We Recover the Performance of Linear Handlers?}
+  \begin{block}{Idea}
+    Take advantage of the linear type system of Links to determine
+    whether continuations are consumed linearly. Furthermore, use the
+    effect system to track the linearity of handlers.
+  \end{block}
+Example
+\end{frame}
+
+\begin{frame}
+  \frametitle{Does It Work?}
+  \begin{figure}
+    \centering
+    \includegraphics[scale=0.45]{figures/sieve_recovered.pdf}
+  \end{figure}
+\end{frame}
+
+% \begin{frame}
+%   Todo
+% \begin{itemize}
+%   \item Motivation for handlers
+%   \item OCaml provides efficient implementation of handlers (show stack diagram)
+%   \item From nice ideal world, to practical and efficient world (type-directed).
+%   \item Report on optimisations
+%   \item Sometime we do not want linear continuation to be promoted.
+% \end{itemize}
+% \end{frame}
 
 \begin{frame}
   \frametitle{Summary}
