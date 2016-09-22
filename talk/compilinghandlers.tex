@@ -223,10 +223,10 @@ See more at \url{http://www.links-lang.org}.
 An algebraic effect is a collection of \emph{abstract operations}, e.g.
 
 \[ 
-Nondet = \{\text{\lstinline$Choose : Bool$}\}, \qquad Failure = \{\text{\lstinline$Fail : Zero$}\}
+Nondet = \{\text{\lstinline$Choose : Bool$}\}
 \]
 
-Using these operations we can define effectful computations \emph{abstractly}, e.g.
+Using abstract operations we can define effectful computations \emph{abstractly}, e.g.
 \begin{onlyenv}<1-1>
 \begin{lstlisting}
 
@@ -1010,9 +1010,10 @@ Need some way to capture the structure of the handler stack at the type-level.
 Compilation options
 \begin{itemize}
   \item Continuation monad (Kammar et al., 2013)
-  \item Free monad (Bauer and Pretnar, 2015)
+  \item Free monad (Kiselyov et al., 2013; Bauer and Pretnar, 2015)
   \item Direct-style like Multicore OCaml (Dolan et al., 2015)
   \item Selective CPS translation (Leijen, 2016)
+  \item Shift/reset control operators (Saleh and Schrijvers, 2016)
 \end{itemize}
 \end{frame}
 
