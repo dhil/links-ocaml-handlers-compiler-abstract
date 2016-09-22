@@ -464,15 +464,15 @@ links> allChoices(flip(toss))();
   \frametitle{Classification of Handlers}
 Handlers can be classified according to their continuation consumption.
   \begin{table}
-    \begin{tabular}{| l | r |}
+    \begin{tabular}{| l | l | r |}
       \hline
-      Type & Cont. consumption \\
+      Type & Example(s) & Cont. consumption \\
       \hline
-      Exception handler & $0$ \\
+      Exception handler & \lstinline$maybeResult$ & $0$ \\
       \hline
-      Linear handler    & $1$ \\
+      Linear handler    & \lstinline$randomResult$, \lstinline$flip$ & $1$ \\
       \hline
-      Multi-shot handler & $> 1$ \\
+      Multi-shot handler & \lstinline$allChoices$ & $> 1$ \\
       \hline
     \end{tabular}
   \end{table}
