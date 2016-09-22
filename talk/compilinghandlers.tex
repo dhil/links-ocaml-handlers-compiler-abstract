@@ -731,7 +731,7 @@ Runtime layout of \lstinline$allChoices(flip(toss))$:
 {\Huge{BOOM!}};}
 
 \end{tikzpicture}
-\uncover<9->{\textbf{Conservative solution:} Implement every handler as a multi-shot handler.}
+\uncover<9->{\textbf{Conservative solution:} implement every handler as a multi-shot handler.}
 \end{figure}
 \end{frame}
 
@@ -829,7 +829,7 @@ Runtime layout of \lstinline$allChoices(flip(toss))$:
     \centering
     \includegraphics[scale=0.40]{figures/sieve_compiler-interpreter.pdf}
   \end{figure}
-  \uncover<2->{\textbf{Idea:} Let's use the linear type system to track the linearity of handlers.}
+  \uncover<2->{\textbf{Idea:} let's use the linear type system to track the linearity of handlers.}
 \end{frame}
 
 % \begin{frame}
@@ -863,6 +863,8 @@ Runtime layout of \lstinline$allChoices(flip(toss))$:
 
 \begin{frame}[fragile]
   \frametitle{Scoping of Handler Promotion}
+  Initial idea: use the effect system to propogate linearity information.
+  \vfill
   \begin{onlyenv}<1-1>
     Ideally, we want this:
   \begin{figure}
