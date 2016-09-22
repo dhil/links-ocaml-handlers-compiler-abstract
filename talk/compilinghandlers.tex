@@ -488,8 +488,8 @@ Handlers can be classified according to their continuation consumption.
   
   \vspace{1cm}
   
-  Thus we are interested in making this abstraction efficient and safe
-  while retaining modularity.
+  Thus we are interested in making this abstraction \emph{efficient} and \emph{safe}
+  while retaining \emph{modularity}.
 \end{frame}
 
 % \begin{frame}
@@ -524,14 +524,14 @@ Handlers can be classified according to their continuation consumption.
 
   \node[above=of C,draw=none,yshift=-2pt] {\footnotesize{\textbf{\textit{OCaml backend}}}};
 
-  \node(D)[yshift=-90pt]          {Byte code};
-  \node(E)[right=of D,xshift=40pt] {Flambda};
+  \node(D)[yshift=-80pt]          {Byte code};
+  %\node(E)[right=of D,xshift=40pt] {Flambda};
 
-  \node(G)[below=of E,yshift=-10pt] {Clambda};
-  \node(H)[below=of G,yshift=-10pt] {Native backends};
+  \node(G)[right=of D,xshift=39pt] {Clambda};
+  \node(H)[below=of G,yshift=-10pt,minimum height=40pt] {Native backends};
 
-  \node(F)[fit=(G)(H),inner sep=0,left=of G.north west,anchor=north east,xshift=-40pt]          {Custom backends};
-
+  %\node(F)[fit=(G)(H),inner sep=0,left=of G.north west,anchor=north east,xshift=-40pt]          {Custom backends};
+  \node(F)[below=of D,yshift=-10pt,minimum height=40pt] {Custom backends};
 
   \node(Z)[thick,fit=(C)(H),inner sep=20pt] {};
 
@@ -542,8 +542,8 @@ Handlers can be classified according to their continuation consumption.
 
   \draw[->] (D) to (F);
 
-  \draw[->] ([xshift=72pt]C.south) to (E.north);
-  \draw[->] (E) to (G);
+  \draw[->] ([xshift=72pt]C.south) to (G.north);
+  %\draw[->] (E) to (G);
   \draw[->] (G) to (H);
 %  \node(C)[below=of B] {C};
 %  \node(D)[below=of C] {D};
@@ -564,11 +564,11 @@ Handlers can be classified according to their continuation consumption.
 \begin{frame}[fragile]
   \frametitle{Multicore OCaml Handlers}
 %
-Multicore OCaml
+Multicore OCaml (Dolan et al., 2015) provides
 \begin{itemize}
-\item provides effect handlers as abstraction for concurrency,
-\item provides an efficient, native implementation of \emph{linear} effect handlers,
-\item provides an explicit copying construct for on demand multi-shot handlers.
+\item effect handlers as an abstraction for concurrency,
+\item an efficient, native implementation of \emph{linear} effect handlers,
+\item an explicit copying construct for on demand multi-shot handlers.
 %\item and implements handlers as heap-managed stack data structures.
 \end{itemize}
 
